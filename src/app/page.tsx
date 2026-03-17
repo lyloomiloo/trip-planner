@@ -1,6 +1,6 @@
 "use client";
 
-import { useMemo, useState, useCallback, useEffect } from "react";
+import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { useItinerary } from "@/hooks/useItinerary";
 import { loadTrip, saveTrip, generateTripId, createBlankItinerary } from "@/lib/tripStore";
 import { generateCityDetails, queuePendingCity, removePendingCity, getPendingCities } from "@/lib/gemini";
@@ -13,7 +13,6 @@ import Toolbar from "@/components/Toolbar";
 import SlideIndex from "@/components/SlideIndex";
 import Overview from "@/components/Overview";
 import Toast from "@/components/Toast";
-import { exportSlidesToPdf } from "@/lib/exportPdf";
 import type { ItineraryData } from "@/types/itinerary";
 
 // Default trip ID for the bundled europe-alps itinerary
@@ -43,10 +42,32 @@ export default function Home() {
     removeDay,
     moveDay,
     loadData,
-    exportJSON,
     importJSON,
     reset,
   } = useItinerary(activeTripId, initialData);
+
+  // Handle deep-link from share page: ?trip=xxx&view=itinerary|overview
+  useEffect(() => {
+    if (typeof window === "undefined") return;
+    const params = new URLSearchParams(window.location.search);
+    const tripParam = params.get("trip");
+    const viewParam = params.get("view");
+    if (tripParam) {
+      const data = loadTrip(tripParam);
+      if (data) {
+        setActiveTripId(tripParam);
+        setInitialData(data);
+        loadData(data);
+        setView("trip");
+        if (viewParam === "overview") {
+          setShowOverview(true);
+        }
+        // Clean URL
+        window.history.replaceState({}, "", "/");
+      }
+    }
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   // Longest city name — used to scale all city titles consistently
   const maxCityNameLength = useMemo(() => {
@@ -95,12 +116,6 @@ export default function Home() {
     });
     return entries;
   }, [flatSlides, state.cities, state.days]);
-
-  // Screenshot-based PDF export
-  const handleExport = useCallback(async () => {
-    await exportSlidesToPdf("main", "[data-slide]", "itinerary.pdf");
-  }, []);
-
 
   /** Open an existing trip from the store */
   const handleSelectTrip = (tripId: string) => {
@@ -178,24 +193,31 @@ export default function Home() {
     reader.readAsText(file);
   };
 
-  /** Import JSON into the current trip (from toolbar) */
-  const handleImportIntoCurrent = (file: File) => {
-    importJSON(file);
-  };
-
-  // State for "Add City" flow
-  const [showAddCityForm, setShowAddCityForm] = useState(false);
-  const [newCityInput, setNewCityInput] = useState("");
-  const [generatingCityId, setGeneratingCityId] = useState<string | null>(null);
+  // Toast state
   const [toastMsg, setToastMsg] = useState("");
   const [toastVisible, setToastVisible] = useState(false);
-
   const showToast = useCallback((msg: string) => {
     setToastMsg(msg);
     setToastVisible(true);
   }, []);
 
-  /** Add a new city destination with Gemini-generated details */
+  /** Share — copy share link to clipboard */
+  const handleShare = useCallback(() => {
+    const shareUrl = `${window.location.origin}/share/${activeTripId}`;
+    navigator.clipboard.writeText(shareUrl).then(() => {
+      showToast("Share link copied to clipboard");
+    }).catch(() => {
+      window.prompt("Share this link:", shareUrl);
+    });
+  }, [activeTripId, showToast]);
+
+  // State for generating cities
+  const [generatingCityId, setGeneratingCityId] = useState<string | null>(null);
+
+  // Ref to track pending scroll-to after adding a day
+  const pendingScrollRef = useRef<number | null>(null);
+
+  /** Add a new city destination with Gemini-generated details (called from toolbar) */
   const handleAddCityDestination = useCallback(async (cityName: string) => {
     const id = cityName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
     const name = cityName.trim();
@@ -243,6 +265,23 @@ export default function Home() {
       ],
     });
 
+    // Auto-scroll to the new day after render
+    pendingScrollRef.current = state.days.length;
+
+    // Geocode city
+    try {
+      const res = await fetch(
+        `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(name)}&format=json&limit=1`
+      );
+      const results = await res.json();
+      if (results?.[0]) {
+        updateCity(id, {
+          lat: parseFloat(results[0].lat),
+          lng: parseFloat(results[0].lon),
+        });
+      }
+    } catch { /* silent */ }
+
     // Fetch Gemini details in background
     setGeneratingCityId(id);
     const result = await generateCityDetails(name);
@@ -264,7 +303,6 @@ export default function Home() {
 
     (async () => {
       for (const { cityId, cityName } of pending) {
-        // Skip if this city already has data (description filled)
         if (state.cities[cityId]?.description) {
           removePendingCity(cityId);
           continue;
@@ -276,7 +314,7 @@ export default function Home() {
           removePendingCity(cityId);
         } else if (result.status === "rate-limited") {
           showToast("Still rate-limited — summaries will generate when the limit resets");
-          break; // stop trying, still limited
+          break;
         }
         setGeneratingCityId(null);
       }
@@ -284,7 +322,21 @@ export default function Home() {
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
 
-  const handleAddDay = () => {
+  // Auto-scroll when pending
+  useEffect(() => {
+    if (pendingScrollRef.current !== null) {
+      const idx = pendingScrollRef.current;
+      pendingScrollRef.current = null;
+      requestAnimationFrame(() => {
+        const el = document.getElementById(`slide-day-${idx}`);
+        if (el) {
+          el.scrollIntoView({ behavior: "smooth", block: "start" });
+        }
+      });
+    }
+  }, [state.days.length]);
+
+  const handleAddDay = useCallback(() => {
     const lastDay = state.days[state.days.length - 1];
     const nextNum = lastDay ? lastDay.dayNumber + 1 : 1;
     const nextDate = lastDay
@@ -310,7 +362,9 @@ export default function Home() {
         { url: null, caption: null, size: "medium", slot: "B" },
       ],
     });
-  };
+
+    pendingScrollRef.current = state.days.length;
+  }, [addDay, state.days]);
 
   // Landing page
   if (view === "landing") {
@@ -338,7 +392,12 @@ export default function Home() {
     <main className="min-h-screen bg-white">
       {/* Overview modal */}
       {showOverview && (
-        <Overview data={state} onClose={() => setShowOverview(false)} />
+        <Overview
+          data={state}
+          onClose={() => setShowOverview(false)}
+          onMoveDay={moveDay}
+          onRemoveDay={removeDay}
+        />
       )}
 
       {/* Scroll index — right edge */}
@@ -346,11 +405,10 @@ export default function Home() {
 
       {/* Top toolbar */}
       <Toolbar
-        onImport={handleImportIntoCurrent}
-        onExport={handleExport}
+        onShare={handleShare}
         onOverview={() => setShowOverview(true)}
         onAddDay={handleAddDay}
-        onAddCity={() => setShowAddCityForm(true)}
+        onAddCity={handleAddCityDestination}
         onReset={reset}
         onBack={() => setView("landing")}
       />
@@ -370,8 +428,6 @@ export default function Home() {
         if (slide.type === "city-intro") {
           const city = state.cities[slide.cityId];
           if (!city) return null;
-          // Find the day index for this city intro (the first day with this cityId after this point)
-          const cityDayIndex = state.days.findIndex((d, di) => d.cityId === slide.cityId && flatSlides.slice(0, i).filter(s => s.type === "day" && state.days[s.dayIndex]?.cityId === slide.cityId).length === 0 && di >= 0);
           return (
             <div key={`city-${slide.cityId}-${i}`} id={`slide-city-${slide.cityId}-${i}`} data-slide>
               <CityIntroSlide
@@ -379,12 +435,7 @@ export default function Home() {
                 cityId={slide.cityId}
                 maxCityNameLength={maxCityNameLength}
                 isGenerating={generatingCityId === slide.cityId}
-                isFirst={i === 0}
-                isLast={i === flatSlides.length - 1}
-                onMoveUp={cityDayIndex > 0 ? () => moveDay(cityDayIndex, cityDayIndex - 1) : undefined}
-                onMoveDown={cityDayIndex < state.days.length - 1 ? () => moveDay(cityDayIndex, cityDayIndex + 1) : undefined}
                 onRemove={() => {
-                  // Remove all days for this city and the city itself
                   const dayIndicesToRemove = state.days
                     .map((d, idx) => d.cityId === slide.cityId ? idx : -1)
                     .filter(idx => idx >= 0)
@@ -415,14 +466,13 @@ export default function Home() {
               onAddGallerySlot={addGallerySlot}
               onRemoveGallerySlot={removeGallerySlot}
               onUpdateDayField={updateDayField}
-              onMoveDay={moveDay}
               onRemoveDay={removeDay}
             />
           </div>
         );
       })}
 
-      {/* ADD — compact buttons below last day */}
+      {/* ADD — compact button below last day */}
       <div className="flex items-center justify-center gap-4 py-16">
         <button
           onClick={handleAddDay}
@@ -430,56 +480,8 @@ export default function Home() {
         >
           + Add Day
         </button>
-
-        {!showAddCityForm ? (
-          <button
-            onClick={() => setShowAddCityForm(true)}
-            className="bg-black text-white text-sm font-bold uppercase tracking-widest px-10 py-3.5 border-2 border-black hover:bg-neutral-800"
-          >
-            + Add City
-          </button>
-        ) : (
-          <div className="flex items-center gap-3 border-2 border-black bg-white px-5 py-2.5">
-            <input
-              autoFocus
-              value={newCityInput}
-              onChange={(e) => setNewCityInput(e.target.value)}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && newCityInput.trim()) {
-                  handleAddCityDestination(newCityInput.trim());
-                  setNewCityInput("");
-                  setShowAddCityForm(false);
-                }
-                if (e.key === "Escape") {
-                  setShowAddCityForm(false);
-                  setNewCityInput("");
-                }
-              }}
-              placeholder="City name"
-              className="border-b-2 border-black bg-transparent py-1 text-sm font-bold uppercase tracking-wide focus:outline-none w-40"
-            />
-            <button
-              onClick={() => {
-                if (newCityInput.trim()) {
-                  handleAddCityDestination(newCityInput.trim());
-                  setNewCityInput("");
-                  setShowAddCityForm(false);
-                }
-              }}
-              disabled={!newCityInput.trim()}
-              className="bg-black text-white text-[10px] font-bold uppercase tracking-widest px-4 py-1.5 hover:bg-neutral-800 disabled:bg-neutral-200 disabled:text-neutral-400"
-            >
-              Create
-            </button>
-            <button
-              onClick={() => { setShowAddCityForm(false); setNewCityInput(""); }}
-              className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-black"
-            >
-              Cancel
-            </button>
-          </div>
-        )}
       </div>
+
       {/* Toast notification */}
       <Toast
         message={toastMsg}

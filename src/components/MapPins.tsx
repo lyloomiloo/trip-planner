@@ -71,9 +71,9 @@ export default function MapPins({ cities, center, zoom }: MapPinsProps) {
             <svg width="18" height="24" viewBox="0 0 18 24" fill="none">
               <path
                 d="M9 0C4.03 0 0 4.03 0 9c0 6.75 9 15 9 15s9-8.25 9-15c0-4.97-4.03-9-9-9z"
-                fill="#C0392B"
+                fill="#C80815"
               />
-              <circle cx="9" cy="9" r="3.5" fill="#7B241C" />
+              <circle cx="9" cy="9" r="3.5" fill="#8A0510" />
             </svg>
           </div>
         );

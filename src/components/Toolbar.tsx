@@ -1,33 +1,33 @@
 "use client";
 
-import { useRef, useState } from "react";
+import { useState } from "react";
 
 interface ToolbarProps {
-  onImport: (file: File) => void;
-  onExport: () => Promise<void> | void;
+  onShare: () => void;
   onOverview: () => void;
   onAddDay: () => void;
-  onAddCity: () => void;
+  onAddCity: (cityName: string) => void;
   onReset: () => void;
   onBack: () => void;
 }
 
 export default function Toolbar({
-  onImport,
-  onExport,
+  onShare,
   onOverview,
   onAddDay,
   onAddCity,
   onReset,
   onBack,
 }: ToolbarProps) {
-  const fileInputRef = useRef<HTMLInputElement>(null);
-  const [exporting, setExporting] = useState(false);
+  const [showCityInput, setShowCityInput] = useState(false);
+  const [cityInput, setCityInput] = useState("");
 
-  const handleExport = async () => {
-    setExporting(true);
-    await onExport();
-    setExporting(false);
+  const handleCitySubmit = () => {
+    if (cityInput.trim()) {
+      onAddCity(cityInput.trim());
+      setCityInput("");
+      setShowCityInput(false);
+    }
   };
 
   const btnClass =
@@ -49,28 +49,44 @@ export default function Toolbar({
         <button onClick={onAddDay} className={btnClass}>
           + Day
         </button>
-        <button onClick={onAddCity} className={btnClass}>
-          + City
-        </button>
+
+        {!showCityInput ? (
+          <button onClick={() => setShowCityInput(true)} className={btnClass}>
+            + City
+          </button>
+        ) : (
+          <div className="flex items-center gap-2">
+            <input
+              autoFocus
+              value={cityInput}
+              onChange={(e) => setCityInput(e.target.value)}
+              onKeyDown={(e) => {
+                if (e.key === "Enter") handleCitySubmit();
+                if (e.key === "Escape") { setShowCityInput(false); setCityInput(""); }
+              }}
+              placeholder="City name"
+              className="border-b-2 border-black bg-transparent py-0.5 text-[10px] font-bold uppercase tracking-wide focus:outline-none w-28"
+            />
+            <button
+              onClick={handleCitySubmit}
+              disabled={!cityInput.trim()}
+              className="text-[10px] font-bold uppercase tracking-widest bg-black text-white px-2 py-0.5 hover:bg-neutral-800 disabled:bg-neutral-200 disabled:text-neutral-400"
+            >
+              Add
+            </button>
+            <button
+              onClick={() => { setShowCityInput(false); setCityInput(""); }}
+              className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-black"
+            >
+              &times;
+            </button>
+          </div>
+        )}
 
         <span className="text-neutral-200">|</span>
 
-        <button onClick={() => fileInputRef.current?.click()} className={btnClass}>
-          Import
-        </button>
-        <input
-          ref={fileInputRef}
-          type="file"
-          accept=".json"
-          className="hidden"
-          onChange={(e) => {
-            const file = e.target.files?.[0];
-            if (file) onImport(file);
-          }}
-        />
-
-        <button onClick={handleExport} className={btnClass} disabled={exporting}>
-          {exporting ? "Exporting..." : "Export"}
+        <button onClick={onShare} className={btnClass}>
+          Share
         </button>
 
         <span className="text-neutral-200">|</span>

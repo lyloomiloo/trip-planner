@@ -32,6 +32,27 @@ type Action =
   | { type: "LOAD_DATA"; data: ItineraryData }
   | { type: "RESET" };
 
+// ─── Helpers ─────────────────────────────────────────────
+
+const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+
+/** Renumber days sequentially and recalculate dates from the first day's date */
+function renumberDays(days: DayData[]): DayData[] {
+  if (days.length === 0) return days;
+  const baseDate = new Date(days[0].date + "T00:00:00");
+  return days.map((d, i) => {
+    const dt = new Date(baseDate);
+    dt.setDate(dt.getDate() + i);
+    const dateStr = dt.toISOString().split("T")[0];
+    return {
+      ...d,
+      dayNumber: i + 1,
+      date: dateStr,
+      weekday: WEEKDAYS[dt.getDay()],
+    };
+  });
+}
+
 // ─── Reducer ─────────────────────────────────────────────
 
 function itineraryReducer(state: ItineraryData, action: Action): ItineraryData {
@@ -111,16 +132,15 @@ function itineraryReducer(state: ItineraryData, action: Action): ItineraryData {
     }
 
     case "REMOVE_DAY": {
-      return { ...state, days: state.days.filter((_, i) => i !== action.dayIndex) };
+      const filtered = state.days.filter((_, i) => i !== action.dayIndex);
+      return { ...state, days: renumberDays(filtered) };
     }
 
     case "MOVE_DAY": {
       const days = [...state.days];
       const [moved] = days.splice(action.fromIndex, 1);
       days.splice(action.toIndex, 0, moved);
-      // Renumber days
-      const renumbered = days.map((d, i) => ({ ...d, dayNumber: i + 1 }));
-      return { ...state, days: renumbered };
+      return { ...state, days: renumberDays(days) };
     }
 
     case "UPDATE_TITLE": {

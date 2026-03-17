@@ -231,6 +231,11 @@ export default function CoverSlide({
               placeholder="City name"
               className="w-full border-b border-black/20 bg-transparent py-1 text-xs font-bold uppercase tracking-wide focus:outline-none focus:border-black"
             />
+            {geocoding && (
+              <p className="text-[9px] uppercase tracking-widest text-black/40 animate-pulse">
+                Finding coordinates...
+              </p>
+            )}
             <div className="flex gap-2">
               <input
                 value={geocoding ? "..." : newCityLat}
@@ -238,7 +243,7 @@ export default function CoverSlide({
                 placeholder="Latitude (auto)"
                 type="number"
                 step="0.0001"
-                className="flex-1 border-b border-black/20 bg-transparent py-1 text-xs font-mono focus:outline-none focus:border-black"
+                className={`flex-1 border-b border-black/20 bg-transparent py-1 text-xs font-mono focus:outline-none focus:border-black ${geocoding ? "animate-pulse text-black/30" : ""}`}
               />
               <input
                 value={geocoding ? "..." : newCityLng}
@@ -246,7 +251,7 @@ export default function CoverSlide({
                 placeholder="Longitude (auto)"
                 type="number"
                 step="0.0001"
-                className="flex-1 border-b border-black/20 bg-transparent py-1 text-xs font-mono focus:outline-none focus:border-black"
+                className={`flex-1 border-b border-black/20 bg-transparent py-1 text-xs font-mono focus:outline-none focus:border-black ${geocoding ? "animate-pulse text-black/30" : ""}`}
               />
             </div>
             <button

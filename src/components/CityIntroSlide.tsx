@@ -8,14 +8,10 @@ interface CityIntroSlideProps {
   maxCityNameLength: number;
   isGenerating?: boolean;
   cityId?: string;
-  onMoveUp?: () => void;
-  onMoveDown?: () => void;
   onRemove?: () => void;
-  isFirst?: boolean;
-  isLast?: boolean;
 }
 
-export default function CityIntroSlide({ city, maxCityNameLength, isGenerating, onMoveUp, onMoveDown, onRemove, isFirst, isLast }: CityIntroSlideProps) {
+export default function CityIntroSlide({ city, maxCityNameLength, isGenerating, onRemove }: CityIntroSlideProps) {
   const [confirmingRemove, setConfirmingRemove] = useState(false);
   const fallbackSrc = `https://maps.google.com/maps?q=${encodeURIComponent(
     city.name + ", " + city.country
@@ -156,26 +152,12 @@ export default function CityIntroSlide({ city, maxCityNameLength, isGenerating, 
       </div>
 
       {/* Bottom-right hover controls */}
-      {(onMoveUp || onMoveDown || onRemove) && (
+      {onRemove && (
         <div className="absolute bottom-6 right-6 z-30 flex gap-2 opacity-0 group-hover/city:opacity-100 transition-opacity">
           {!confirmingRemove ? (
-            <>
-              {onMoveUp && !isFirst && (
-                <button onClick={onMoveUp} className="bg-black text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 hover:bg-neutral-800">
-                  Move Up
-                </button>
-              )}
-              {onMoveDown && !isLast && (
-                <button onClick={onMoveDown} className="bg-black text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 hover:bg-neutral-800">
-                  Move Down
-                </button>
-              )}
-              {onRemove && (
-                <button onClick={() => setConfirmingRemove(true)} className="bg-black text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 hover:bg-red-700">
-                  Remove
-                </button>
-              )}
-            </>
+            <button onClick={() => setConfirmingRemove(true)} className="bg-black text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 hover:bg-red-700">
+              Remove
+            </button>
           ) : (
             <div className="flex items-center gap-3 bg-white border-2 border-black px-4 py-2">
               <span className="text-[10px] font-bold uppercase tracking-widest">Remove {city.name}?</span>

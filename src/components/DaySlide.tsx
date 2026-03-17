@@ -20,7 +20,6 @@ interface DaySlideProps {
   onAddGallerySlot: (dayIndex: number, slot: GallerySlotType) => void;
   onRemoveGallerySlot: (dayIndex: number, slotIndex: number) => void;
   onUpdateDayField: (dayIndex: number, field: keyof DayData, value: string) => void;
-  onMoveDay: (fromIndex: number, toIndex: number) => void;
   onRemoveDay: (dayIndex: number) => void;
 }
 
@@ -37,7 +36,6 @@ export default function DaySlide({
   onAddGallerySlot,
   onRemoveGallerySlot,
   onUpdateDayField,
-  onMoveDay,
   onRemoveDay,
 }: DaySlideProps) {
   const [confirmingRemove, setConfirmingRemove] = useState(false);
@@ -120,30 +118,12 @@ export default function DaySlide({
       {/* Bottom-right hover controls */}
       <div className="absolute bottom-6 right-6 z-20 flex gap-2 opacity-0 group-hover/day:opacity-100 transition-opacity">
         {!confirmingRemove ? (
-          <>
-            {dayIndex > 0 && (
-              <button
-                onClick={() => onMoveDay(dayIndex, dayIndex - 1)}
-                className="bg-black text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 hover:bg-neutral-800"
-              >
-                Move Up
-              </button>
-            )}
-            {dayIndex < totalDays - 1 && (
-              <button
-                onClick={() => onMoveDay(dayIndex, dayIndex + 1)}
-                className="bg-black text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 hover:bg-neutral-800"
-              >
-                Move Down
-              </button>
-            )}
-            <button
-              onClick={() => setConfirmingRemove(true)}
-              className="bg-black text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 hover:bg-red-700"
-            >
-              Remove
-            </button>
-          </>
+          <button
+            onClick={() => setConfirmingRemove(true)}
+            className="bg-black text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 hover:bg-red-700"
+          >
+            Remove
+          </button>
         ) : (
           <div className="flex items-center gap-3 bg-white border-2 border-black px-4 py-2">
             <span className="text-[10px] font-bold uppercase tracking-widest">
