@@ -62,9 +62,9 @@ export default function DaySlide({
   const weatherLng = day.weatherLng ?? city.lng;
 
   return (
-    <section className={`group/day relative w-full px-12 py-10 border-b border-neutral-200 overflow-hidden ${dayIndex < totalDays - 1 ? "snap-start" : ""}`} style={{ height: "var(--slide-h)" }}>
+    <section className={`group/day relative w-full px-12 pt-10 pb-14 border-b border-neutral-200 overflow-hidden flex flex-col ${dayIndex < totalDays - 1 ? "snap-start" : ""}`} style={{ height: "var(--slide-h)" }}>
       {/* Top row: Weather (left) + Day header (right) */}
-      <div className="flex justify-between items-start mb-8">
+      <div className="flex justify-between items-start mb-2">
         {/* Weather widget — top left */}
         <WeatherWidget
           lat={weatherLat}
@@ -123,6 +123,7 @@ export default function DaySlide({
                 value={day.route}
                 onChange={(v) => onUpdateDayField(dayIndex, "route", v)}
                 className="font-bold text-base uppercase tracking-wide text-accent-blue"
+                placeholder="(HIGHLIGHT)"
               />
             )}
           </div>
@@ -130,9 +131,9 @@ export default function DaySlide({
       </div>
 
       {/* Main content: Gallery (left ~60%) + Schedule (right ~40%) */}
-      <div className="flex gap-10">
+      <div className="flex gap-10 flex-1 min-h-0">
         {/* Image gallery */}
-        <div className="w-[58%] shrink-0">
+        <div className="w-[58%] shrink-0 overflow-hidden">
           <ImageGallery
             gallery={day.gallery}
             onUpdateSlot={(i, slot) => onUpdateGallerySlot(dayIndex, i, slot)}
@@ -156,6 +157,7 @@ export default function DaySlide({
                 .map((e) => `${e.title} ${city.name}`),
             ]}
             locked={locked}
+            dayNumber={day.dayNumber}
           />
         </div>
 
@@ -193,18 +195,19 @@ export default function DaySlide({
         </div>
       </div>
 
-      {/* Accommodation footer */}
-      <div className="mt-8 text-sm uppercase tracking-widest text-neutral-400">
+      {/* Accommodation footer — pinned to bottom */}
+      <div className="absolute bottom-4 left-12 right-12 group/accom text-sm uppercase tracking-widest text-neutral-400 flex items-center">
         {locked ? (
-          <span>{day.accommodation}</span>
+          <span>{day.accommodation || "—"}</span>
         ) : (
           <EditableText
             value={day.accommodation}
             onChange={(v) => onUpdateDayField(dayIndex, "accommodation", v)}
+            placeholder="(hotel name here)"
           />
         )}
         <span className="mx-2">/</span>
-        {city.name}, {city.country}
+        <span>{city.name}, {city.country}</span>
       </div>
 
       {/* Bottom-right hover controls — hidden when locked */}

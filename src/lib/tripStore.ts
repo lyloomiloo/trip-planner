@@ -93,64 +93,92 @@ export function generateTripId(title: string): string {
   return slug || `trip-${Date.now()}`;
 }
 
-/** Create a blank ItineraryData from form inputs */
+interface Destination {
+  city: string;
+  nights: number;
+}
+
+/** Create a fully populated ItineraryData from form inputs with multiple destinations */
 export function createBlankItinerary(opts: {
   title: string;
   startDate: string;
-  endDate: string;
-  startCity: string;
-  endCity: string;
+  origin: string;
+  destinations: Destination[];
 }): ItineraryData {
   const titleWords = opts.title.toUpperCase().split(/\s+/);
-
-  // Calculate number of days
-  const start = new Date(opts.startDate + "T12:00:00");
-  const end = opts.endDate ? new Date(opts.endDate + "T12:00:00") : start;
-  const diffDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000) + 1);
-
   const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
+  const start = new Date(opts.startDate + "T12:00:00");
 
-  // Create days
-  const days = Array.from({ length: diffDays }, (_, i) => {
-    const d = new Date(start);
-    d.setDate(d.getDate() + i);
-    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-    return {
-      dayNumber: i + 1,
-      date: dateStr,
-      weekday: weekdays[d.getDay()],
-      cityId: "city-1",
-      route: i === 0 && opts.startCity ? `${opts.startCity.toUpperCase()} \u2708 ${opts.endCity.toUpperCase() || "TBD"}` : "",
-      accommodation: "",
-      events: [],
-      gallery: [
-        { url: null, caption: null, size: "large" as const, slot: "A" },
-        { url: null, caption: null, size: "medium" as const, slot: "B" },
-      ],
-    };
-  });
+  // Build cities
+  const cities: Record<string, import("@/types/itinerary").CityData> = {};
+  const cityIds: string[] = [];
 
-  // Create a placeholder city
-  const cities: Record<string, import("@/types/itinerary").CityData> = {
-    "city-1": {
-      name: opts.endCity || "Destination",
+  for (const dest of opts.destinations) {
+    const name = dest.city.trim();
+    const id = name.toLowerCase().replace(/[^a-z0-9]+/g, "-");
+    cityIds.push(id);
+
+    const splitAt = Math.ceil(name.length / 2);
+    cities[id] = {
+      name,
       splitName: [
-        (opts.endCity || "DEST").substring(0, 3).toUpperCase(),
-        (opts.endCity || "INATION").substring(3).toUpperCase() || ".",
+        name.substring(0, splitAt).toUpperCase(),
+        name.substring(splitAt).toUpperCase() || ".",
       ],
       country: "",
       countryLabel: "",
       lat: 47.0,
       lng: 8.0,
       description: "",
-      mapZoom: 12,
-    },
-  };
+      mapZoom: 13,
+    };
+  }
+
+  // Build days — distributed across destinations by nights
+  const days: import("@/types/itinerary").DayData[] = [];
+  let dayCounter = 0;
+
+  opts.destinations.forEach((dest, destIdx) => {
+    const cityId = cityIds[destIdx];
+    const prevCity = destIdx > 0 ? opts.destinations[destIdx - 1].city.toUpperCase() : opts.origin.toUpperCase();
+    const currentCity = dest.city.toUpperCase();
+
+    for (let night = 0; night < dest.nights; night++) {
+      const d = new Date(start);
+      d.setDate(d.getDate() + dayCounter);
+      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+      // Route label: first day of each city shows travel route
+      let route = "";
+      if (night === 0 && prevCity) {
+        route = `${prevCity} \u2192 ${currentCity}`;
+      }
+
+      days.push({
+        dayNumber: dayCounter + 1,
+        date: dateStr,
+        weekday: weekdays[d.getDay()],
+        cityId,
+        route,
+        accommodation: "",
+        events: [],
+        gallery: [
+          { url: null, caption: null, size: "large" as const, slot: "A" },
+          { url: null, caption: null, size: "medium" as const, slot: "B" },
+          { url: null, caption: null, size: "medium" as const, slot: "C" },
+          { url: null, caption: null, size: "small" as const, slot: "D" },
+          { url: null, caption: null, size: "large" as const, slot: "E" },
+        ],
+      });
+
+      dayCounter++;
+    }
+  });
 
   return {
     tripTitle: titleWords,
     travellers: 1,
-    origin: opts.startCity || "",
+    origin: opts.origin || "",
     cities,
     days,
   };

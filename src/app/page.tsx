@@ -6,6 +6,7 @@ import { loadTrip, saveTrip, generateTripId, createBlankItinerary } from "@/lib/
 import { generateCityDetails, queuePendingCity, removePendingCity, getPendingCities } from "@/lib/gemini";
 import LandingPage from "@/components/LandingPage";
 import NewTripForm from "@/components/NewTripForm";
+import type { NewTripData } from "@/components/NewTripForm";
 import CoverSlide from "@/components/CoverSlide";
 import CityIntroSlide from "@/components/CityIntroSlide";
 import DaySlide from "@/components/DaySlide";
@@ -131,17 +132,23 @@ export default function Home() {
     setView("trip");
   };
 
-  /** Open the default bundled trip (first time or no localStorage) */
+  /** Open the default bundled trip — prefer saved version from localStorage */
   const handleOpenDefault = () => {
     setActiveTripId(DEFAULT_TRIP_ID);
-    setInitialData(undefined); // uses bundled JSON
+    const saved = loadTrip(DEFAULT_TRIP_ID);
+    if (saved) {
+      setInitialData(saved);
+      loadData(saved);
+    } else {
+      setInitialData(undefined); // uses bundled JSON
+      // Save it to the store so it shows up in Continue Plan
+      saveTrip(DEFAULT_TRIP_ID, state);
+    }
     setView("trip");
-    // Save it to the store so it shows up in Continue Plan
-    saveTrip(DEFAULT_TRIP_ID, state);
   };
 
-  /** Create a blank trip from form data, geocode the destination */
-  const handleCreateBlank = async (formData: { title: string; startDate: string; endDate: string; startCity: string; endCity: string }) => {
+  /** Create a trip from form data with multiple destinations — geocode + Gemini all cities */
+  const handleCreateBlank = async (formData: NewTripData) => {
     const tripId = generateTripId(formData.title);
     const data = createBlankItinerary(formData);
     saveTrip(tripId, data);
@@ -150,29 +157,35 @@ export default function Home() {
     loadData(data);
     setView("trip");
 
-    // Geocode the destination city in background so the pin appears on the map
-    if (formData.endCity) {
+    // Geocode + Gemini each destination city in background
+    for (const dest of formData.destinations) {
+      const cityId = dest.city.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+
+      // Geocode
       try {
         const res = await fetch(
-          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(formData.endCity)}&format=json&limit=1`
+          `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(dest.city)}&format=json&limit=1`
         );
         const results = await res.json();
         if (results?.[0]) {
-          updateCity("city-1", {
+          updateCity(cityId, {
             lat: parseFloat(results[0].lat),
             lng: parseFloat(results[0].lon),
           });
         }
       } catch { /* silent */ }
 
-      // Also fire Gemini to populate city details
-      const result = await generateCityDetails(formData.endCity);
+      // Gemini city details
+      setGeneratingCityId(cityId);
+      const result = await generateCityDetails(dest.city);
       if (result.status === "ok") {
-        updateCity("city-1", result.data);
+        updateCity(cityId, result.data);
+        removePendingCity(cityId);
       } else if (result.status === "rate-limited") {
-        queuePendingCity("city-1", formData.endCity);
-        showToast("The LLM is generating your summary — check back shortly");
+        queuePendingCity(cityId, dest.city);
+        showToast("The LLM is generating city summaries — check back shortly");
       }
+      setGeneratingCityId(null);
     }
   };
 
@@ -265,6 +278,9 @@ export default function Home() {
       gallery: [
         { url: null, caption: null, size: "large", slot: "A" },
         { url: null, caption: null, size: "medium", slot: "B" },
+        { url: null, caption: null, size: "medium", slot: "C" },
+        { url: null, caption: null, size: "small", slot: "D" },
+        { url: null, caption: null, size: "large", slot: "E" },
       ],
     });
 
@@ -363,6 +379,9 @@ export default function Home() {
       gallery: [
         { url: null, caption: null, size: "large", slot: "A" },
         { url: null, caption: null, size: "medium", slot: "B" },
+        { url: null, caption: null, size: "medium", slot: "C" },
+        { url: null, caption: null, size: "small", slot: "D" },
+        { url: null, caption: null, size: "large", slot: "E" },
       ],
     });
 
@@ -483,7 +502,7 @@ export default function Home() {
         );
       })}
 
-      {/* ADD — compact button below last day */}
+      {/* ADD — compact buttons below last day */}
       {!locked && (
         <div className="flex items-center justify-center gap-4 py-16">
           <button
@@ -491,6 +510,15 @@ export default function Home() {
             className="bg-white text-black text-sm font-bold uppercase tracking-widest px-10 py-3.5 border-2 border-black hover:bg-neutral-100"
           >
             + Add Day
+          </button>
+          <button
+            onClick={() => {
+              const name = prompt("City name:");
+              if (name?.trim()) handleAddCityDestination(name.trim());
+            }}
+            className="bg-black text-white text-sm font-bold uppercase tracking-widest px-10 py-3.5 border-2 border-black hover:bg-neutral-800"
+          >
+            + Add City
           </button>
         </div>
       )}

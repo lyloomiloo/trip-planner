@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useCallback, useMemo } from "react";
 import type { GallerySlot as GallerySlotType } from "@/types/itinerary";
 import GallerySlot from "./GallerySlot";
 import ImageSearchModal from "./ImageSearchModal";
@@ -11,22 +11,189 @@ interface ImageGalleryProps {
   onUpdateSlot: (index: number, slot: Partial<GallerySlotType>) => void;
   onAddSlot: () => void;
   onRemoveSlot: (index: number) => void;
-  autoSearchTerms?: string[]; // e.g. ["Geneva", "Lake Geneva", "Cottage Cafe"]
+  autoSearchTerms?: string[];
   locked?: boolean;
+  dayNumber?: number; // used as seed for layout randomization
 }
 
-// Map slot sizes to CSS grid row/col spans
-function sizeToSpan(size: string) {
-  switch (size) {
-    case "large":
-      return { colSpan: "col-span-2", rowSpan: "row-span-2", height: "h-64" };
-    case "medium":
-      return { colSpan: "col-span-1", rowSpan: "row-span-1", height: "h-48" };
-    case "small":
-      return { colSpan: "col-span-1", rowSpan: "row-span-1", height: "h-36" };
-    default:
-      return { colSpan: "col-span-1", rowSpan: "row-span-1", height: "h-48" };
-  }
+// ──────────────────────────────────────────────────
+// Layout templates — each defines CSS grid areas
+// for an organic, asymmetric collage look.
+// Positions are defined as { gridColumn, gridRow }
+// on a 12-column × 12-row grid.
+// ──────────────────────────────────────────────────
+
+interface SlotPlacement {
+  gridColumn: string;
+  gridRow: string;
+}
+
+interface LayoutTemplate {
+  columns: string;
+  rows: string;
+  slots: SlotPlacement[];
+}
+
+// All templates use a 12×12 grid with NO overlapping areas.
+
+// Templates for exactly 5 slots
+const TEMPLATES_5: LayoutTemplate[] = [
+  {
+    // Layout A: large top-left, medium top-right, medium bottom-left, small bottom-center, medium bottom-right
+    columns: "repeat(12, 1fr)",
+    rows: "repeat(12, 1fr)",
+    slots: [
+      { gridColumn: "1 / 7", gridRow: "1 / 7" },
+      { gridColumn: "7 / 13", gridRow: "1 / 7" },
+      { gridColumn: "1 / 5", gridRow: "7 / 13" },
+      { gridColumn: "5 / 8", gridRow: "7 / 13" },
+      { gridColumn: "8 / 13", gridRow: "7 / 13" },
+    ],
+  },
+  {
+    // Layout B: tall left, small top-right, small mid-right, wide bottom
+    columns: "repeat(12, 1fr)",
+    rows: "repeat(12, 1fr)",
+    slots: [
+      { gridColumn: "1 / 7", gridRow: "1 / 8" },
+      { gridColumn: "7 / 13", gridRow: "1 / 4" },
+      { gridColumn: "7 / 13", gridRow: "4 / 8" },
+      { gridColumn: "1 / 6", gridRow: "8 / 13" },
+      { gridColumn: "6 / 13", gridRow: "8 / 13" },
+    ],
+  },
+  {
+    // Layout C: large top-left, small top-right, small mid-right, medium bottom-left, medium bottom-right
+    columns: "repeat(12, 1fr)",
+    rows: "repeat(12, 1fr)",
+    slots: [
+      { gridColumn: "1 / 8", gridRow: "1 / 7" },
+      { gridColumn: "8 / 13", gridRow: "1 / 4" },
+      { gridColumn: "8 / 13", gridRow: "4 / 7" },
+      { gridColumn: "1 / 7", gridRow: "7 / 13" },
+      { gridColumn: "7 / 13", gridRow: "7 / 13" },
+    ],
+  },
+  {
+    // Layout D: two columns top, three columns bottom
+    columns: "repeat(12, 1fr)",
+    rows: "repeat(12, 1fr)",
+    slots: [
+      { gridColumn: "1 / 5", gridRow: "1 / 7" },
+      { gridColumn: "5 / 13", gridRow: "1 / 7" },
+      { gridColumn: "1 / 5", gridRow: "7 / 13" },
+      { gridColumn: "5 / 9", gridRow: "7 / 13" },
+      { gridColumn: "9 / 13", gridRow: "7 / 13" },
+    ],
+  },
+  {
+    // Layout E: three columns top, two columns bottom
+    columns: "repeat(12, 1fr)",
+    rows: "repeat(12, 1fr)",
+    slots: [
+      { gridColumn: "1 / 5", gridRow: "1 / 6" },
+      { gridColumn: "5 / 9", gridRow: "1 / 6" },
+      { gridColumn: "9 / 13", gridRow: "1 / 6" },
+      { gridColumn: "1 / 7", gridRow: "6 / 13" },
+      { gridColumn: "7 / 13", gridRow: "6 / 13" },
+    ],
+  },
+];
+
+// Templates for 4 slots
+const TEMPLATES_4: LayoutTemplate[] = [
+  {
+    columns: "repeat(12, 1fr)",
+    rows: "repeat(12, 1fr)",
+    slots: [
+      { gridColumn: "1 / 8", gridRow: "1 / 7" },
+      { gridColumn: "8 / 13", gridRow: "1 / 7" },
+      { gridColumn: "1 / 5", gridRow: "7 / 13" },
+      { gridColumn: "5 / 13", gridRow: "7 / 13" },
+    ],
+  },
+  {
+    columns: "repeat(12, 1fr)",
+    rows: "repeat(12, 1fr)",
+    slots: [
+      { gridColumn: "1 / 7", gridRow: "1 / 8" },
+      { gridColumn: "7 / 13", gridRow: "1 / 5" },
+      { gridColumn: "7 / 13", gridRow: "5 / 13" },
+      { gridColumn: "1 / 7", gridRow: "8 / 13" },
+    ],
+  },
+  {
+    columns: "repeat(12, 1fr)",
+    rows: "repeat(12, 1fr)",
+    slots: [
+      { gridColumn: "1 / 13", gridRow: "1 / 5" },
+      { gridColumn: "1 / 6", gridRow: "5 / 10" },
+      { gridColumn: "6 / 13", gridRow: "5 / 10" },
+      { gridColumn: "1 / 13", gridRow: "10 / 13" },
+    ],
+  },
+];
+
+// Templates for 3 slots
+const TEMPLATES_3: LayoutTemplate[] = [
+  {
+    columns: "repeat(12, 1fr)",
+    rows: "repeat(12, 1fr)",
+    slots: [
+      { gridColumn: "1 / 8", gridRow: "1 / 7" },
+      { gridColumn: "8 / 13", gridRow: "1 / 7" },
+      { gridColumn: "1 / 13", gridRow: "7 / 13" },
+    ],
+  },
+  {
+    columns: "repeat(12, 1fr)",
+    rows: "repeat(12, 1fr)",
+    slots: [
+      { gridColumn: "1 / 13", gridRow: "1 / 6" },
+      { gridColumn: "1 / 6", gridRow: "6 / 13" },
+      { gridColumn: "6 / 13", gridRow: "6 / 13" },
+    ],
+  },
+];
+
+// Templates for 2 slots
+const TEMPLATES_2: LayoutTemplate[] = [
+  {
+    columns: "repeat(12, 1fr)",
+    rows: "repeat(12, 1fr)",
+    slots: [
+      { gridColumn: "1 / 8", gridRow: "1 / 13" },
+      { gridColumn: "8 / 13", gridRow: "1 / 13" },
+    ],
+  },
+  {
+    columns: "repeat(12, 1fr)",
+    rows: "repeat(12, 1fr)",
+    slots: [
+      { gridColumn: "1 / 13", gridRow: "1 / 7" },
+      { gridColumn: "1 / 13", gridRow: "7 / 13" },
+    ],
+  },
+];
+
+// Template for 1 slot
+const TEMPLATES_1: LayoutTemplate[] = [
+  {
+    columns: "1fr",
+    rows: "1fr",
+    slots: [{ gridColumn: "1 / -1", gridRow: "1 / -1" }],
+  },
+];
+
+function pickTemplate(count: number, seed: number): LayoutTemplate {
+  let templates: LayoutTemplate[];
+  if (count >= 5) templates = TEMPLATES_5;
+  else if (count === 4) templates = TEMPLATES_4;
+  else if (count === 3) templates = TEMPLATES_3;
+  else if (count === 2) templates = TEMPLATES_2;
+  else templates = TEMPLATES_1;
+
+  return templates[seed % templates.length];
 }
 
 export default function ImageGallery({
@@ -36,6 +203,7 @@ export default function ImageGallery({
   onRemoveSlot,
   autoSearchTerms,
   locked,
+  dayNumber = 1,
 }: ImageGalleryProps) {
   const [modalOpen, setModalOpen] = useState(false);
   const [activeSlotIndex, setActiveSlotIndex] = useState<number | null>(null);
@@ -69,7 +237,6 @@ export default function ImageGallery({
 
     setAutoFilling(true);
 
-    // Search for each term and distribute results across empty slots
     let slotCursor = 0;
     for (const term of autoSearchTerms) {
       if (slotCursor >= emptySlotIndices.length) break;
@@ -97,7 +264,6 @@ export default function ImageGallery({
 
   // Refresh: clear all auto-filled images, then re-fill with next page
   const handleRefreshAutoFill = useCallback(async () => {
-    // Clear slots that were auto-filled (source === "search")
     gallery.forEach((slot, i) => {
       if (slot.url && slot.source === "search") {
         onUpdateSlot(i, { url: null, attribution: undefined, source: undefined, caption: null });
@@ -107,74 +273,122 @@ export default function ImageGallery({
     const nextPage = autoFillPage + 1;
     setAutoFillPage(nextPage);
 
-    // Small delay to let state update before re-filling
     await new Promise((r) => setTimeout(r, 100));
     handleAutoFill(nextPage);
   }, [gallery, onUpdateSlot, autoFillPage, handleAutoFill]);
 
+  // Determine which slots to render (in locked mode, hide empty ones)
+  const visibleSlots = useMemo(() => {
+    if (locked) {
+      return gallery
+        .map((slot, i) => ({ slot, originalIndex: i }))
+        .filter(({ slot }) => !!slot.url);
+    }
+    return gallery.map((slot, i) => ({ slot, originalIndex: i }));
+  }, [gallery, locked]);
+
+  // Pick a layout template based on visible slot count and day number as seed
+  const template = useMemo(
+    () => pickTemplate(visibleSlots.length, dayNumber),
+    [visibleSlots.length, dayNumber]
+  );
+
   const hasEmptySlots = gallery.some((s) => !s.url);
   const hasAutoFilledSlots = gallery.some((s) => s.url && s.source === "search");
 
+  if (visibleSlots.length === 0 && locked) return null;
+
   return (
     <>
-      <div className="grid grid-cols-2 gap-2 auto-rows-min">
-        {gallery.map((slot, i) => {
-          // In locked mode, hide empty slots (no image)
-          if (locked && !slot.url) return null;
-          const span = sizeToSpan(slot.size);
+      {/* Auto-fill buttons above gallery — hidden when locked */}
+      {!locked && autoSearchTerms && autoSearchTerms.length > 0 && (
+        <div className="flex items-center gap-3 mb-2">
+          {hasEmptySlots && (
+            <button
+              onClick={() => handleAutoFill(autoFillPage)}
+              disabled={autoFilling}
+              className="text-[10px] font-bold uppercase tracking-widest text-neutral-300 hover:text-neutral-500"
+            >
+              {autoFilling ? "Filling..." : "Auto-fill images"}
+            </button>
+          )}
+          {hasAutoFilledSlots && !autoFilling && (
+            <button
+              onClick={handleRefreshAutoFill}
+              className="text-[10px] font-bold uppercase tracking-widest text-neutral-300 hover:text-neutral-500"
+              title="Get different images"
+            >
+              ↻ Refresh
+            </button>
+          )}
+        </div>
+      )}
+
+      <div
+        className="relative w-full"
+        style={{
+          display: "grid",
+          gridTemplateColumns: template.columns,
+          gridTemplateRows: template.rows,
+          gap: "6px",
+          height: "100%",
+          maxHeight: "100%",
+        }}
+      >
+        {visibleSlots.map(({ slot, originalIndex }, vi) => {
+          const placement = template.slots[vi];
+          if (!placement) {
+            // More slots than template supports — fall back to auto placement
+            return (
+              <div
+                key={`${slot.slot}-${originalIndex}`}
+                style={{ gridColumn: "span 6", gridRow: "span 4" }}
+              >
+                <GallerySlot
+                  slot={slot}
+                  onClickEmpty={locked ? undefined : () => openModal(originalIndex, "search")}
+                  onClickSearch={locked ? undefined : () => openModal(originalIndex, "search")}
+                  onClickPasteUrl={locked ? undefined : () => openModal(originalIndex, "url")}
+                  onRemove={locked ? undefined : () => {
+                    if (slot.url) {
+                      onUpdateSlot(originalIndex, { url: null, attribution: undefined, source: undefined });
+                    } else {
+                      onRemoveSlot(originalIndex);
+                    }
+                  }}
+                  onUpdateCaption={locked ? undefined : (caption) => onUpdateSlot(originalIndex, { caption })}
+                  onResize={locked ? undefined : (size) => onUpdateSlot(originalIndex, { size })}
+                />
+              </div>
+            );
+          }
+
           return (
             <div
-              key={`${slot.slot}-${i}`}
-              className={`${span.colSpan} ${span.rowSpan} ${span.height}`}
+              key={`${slot.slot}-${originalIndex}`}
+              style={{
+                gridColumn: placement.gridColumn,
+                gridRow: placement.gridRow,
+              }}
             >
               <GallerySlot
                 slot={slot}
-                onClickEmpty={locked ? undefined : () => openModal(i, "search")}
-                onClickSearch={locked ? undefined : () => openModal(i, "search")}
-                onClickPasteUrl={locked ? undefined : () => openModal(i, "url")}
+                onClickEmpty={locked ? undefined : () => openModal(originalIndex, "search")}
+                onClickSearch={locked ? undefined : () => openModal(originalIndex, "search")}
+                onClickPasteUrl={locked ? undefined : () => openModal(originalIndex, "url")}
                 onRemove={locked ? undefined : () => {
                   if (slot.url) {
-                    onUpdateSlot(i, { url: null, attribution: undefined, source: undefined });
+                    onUpdateSlot(originalIndex, { url: null, attribution: undefined, source: undefined });
                   } else {
-                    onRemoveSlot(i);
+                    onRemoveSlot(originalIndex);
                   }
                 }}
-                onUpdateCaption={locked ? undefined : (caption) => onUpdateSlot(i, { caption })}
-                onResize={locked ? undefined : (size) => onUpdateSlot(i, { size })}
+                onUpdateCaption={locked ? undefined : (caption) => onUpdateSlot(originalIndex, { caption })}
+                onResize={locked ? undefined : (size) => onUpdateSlot(originalIndex, { size })}
               />
             </div>
           );
         })}
-
-        {/* Add slot + auto-fill buttons — hidden when locked */}
-        {!locked && (
-          <div className="col-span-1 h-24 flex items-center justify-center gap-4">
-            <button
-              onClick={onAddSlot}
-              className="text-xs text-neutral-400 hover:text-neutral-600 flex items-center gap-1"
-            >
-              <span className="text-2xl leading-none font-light">+</span> Add slot
-            </button>
-            {hasEmptySlots && autoSearchTerms && autoSearchTerms.length > 0 && (
-              <button
-                onClick={() => handleAutoFill(autoFillPage)}
-                disabled={autoFilling}
-                className="text-xs text-neutral-300 hover:text-neutral-500 flex items-center gap-1"
-              >
-                {autoFilling ? "Filling..." : "Auto-fill images"}
-              </button>
-            )}
-            {hasAutoFilledSlots && !autoFilling && (
-              <button
-                onClick={handleRefreshAutoFill}
-                className="text-xs text-neutral-300 hover:text-neutral-500 flex items-center gap-1"
-                title="Get different images"
-              >
-                ↻ Refresh
-              </button>
-            )}
-          </div>
-        )}
       </div>
 
       {/* Image Search Modal */}

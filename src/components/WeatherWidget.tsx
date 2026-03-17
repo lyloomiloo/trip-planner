@@ -50,9 +50,10 @@ export default function WeatherWidget({ lat, lng, date, cityName, onUpdateLocati
               </span>
               <button
                 onClick={() => setEditing(true)}
-                className="text-[11px] uppercase tracking-widest text-[#4A7C9B] hover:text-[#2d5a75] font-bold opacity-60 hover:opacity-100"
+                className="text-base text-[#4A7C9B] hover:text-[#2d5a75] opacity-60 hover:opacity-100 inline-block -scale-x-100"
+                title="Change location"
               >
-                Edit
+                ✎
               </button>
             </>
           ) : (

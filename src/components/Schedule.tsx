@@ -105,10 +105,10 @@ export default function Schedule({
           &#x2801;&#x2801;
         </span>
         <div className={`font-bold text-base tabular-nums shrink-0 w-24 text-right ${isTransport ? colorClass : ""}`}>
-          <EditableText value={event.time} onChange={(v) => onUpdateEvent(globalIndex, { time: v })} className={isTransport ? colorClass : ""} />
+          <EditableText value={event.time} onChange={(v) => onUpdateEvent(globalIndex, { time: v })} className={isTransport ? colorClass : ""} placeholder="--:--" />
         </div>
         <div className={`flex-1 text-base text-right ${isTransport ? colorClass : ""}`}>
-          <EditableText value={event.title} onChange={(v) => onUpdateEvent(globalIndex, { title: v })} className={isTransport ? colorClass : ""} />
+          <EditableText value={event.title} onChange={(v) => onUpdateEvent(globalIndex, { title: v })} className={isTransport ? colorClass : ""} placeholder="Event name" />
         </div>
         <button onClick={() => onRemoveEvent(globalIndex)} className="opacity-0 group-hover/evt:opacity-40 hover:!opacity-100 text-sm text-red-500 shrink-0 mt-0.5">&times;</button>
       </div>

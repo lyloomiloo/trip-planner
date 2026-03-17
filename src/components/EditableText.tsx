@@ -56,7 +56,7 @@ export default function EditableText({
         }}
         className={`editable-input ${inputClassName} ${className}`}
         placeholder={placeholder}
-        style={{ width: `${Math.max(draft.length, 3)}ch` }}
+        style={{ width: `${Math.max(draft.length, placeholder.length, 6)}ch` }}
       />
     );
   }

@@ -27,7 +27,7 @@ export default function GallerySlot({
   if (!slot.url) {
     // Empty slot — should not render in locked mode (filtered upstream)
     return (
-      <div className="relative group">
+      <div className="relative group h-full">
         <div
           onClick={onClickEmpty}
           className="gallery-slot-empty w-full h-full flex-col gap-2 cursor-pointer"

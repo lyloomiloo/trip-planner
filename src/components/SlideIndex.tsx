@@ -94,10 +94,10 @@ export default function SlideIndex({ slides }: SlideIndexProps) {
               <button
                 key={slide.id}
                 onClick={() => { scrollTo(slide.id); setOpen(false); }}
-                className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-left transition-colors rounded-sm hover:text-[#C80815] ${
+                className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-left transition-colors rounded-sm group/idx ${
                   isActive
                     ? "bg-neutral-50"
-                    : ""
+                    : "hover:text-[#C80815]"
                 }`}
               >
                 {/* Dot */}
@@ -115,10 +115,8 @@ export default function SlideIndex({ slides }: SlideIndexProps) {
 
                 {/* Label */}
                 <span
-                  className={`text-[6px] font-bold uppercase tracking-widest ${
-                    isCity
-                      ? isActive ? "text-black" : "text-neutral-500"
-                      : isActive ? "text-black" : "text-neutral-400"
+                  className={`text-[9px] font-bold uppercase tracking-widest transition-colors ${
+                    isActive ? "text-black" : "text-neutral-400 group-hover/idx:text-[#C80815]"
                   }`}
                 >
                   {slide.label}
@@ -126,7 +124,9 @@ export default function SlideIndex({ slides }: SlideIndexProps) {
 
                 {/* Sublabel */}
                 {slide.sublabel && (
-                  <span className="text-[7px] uppercase tracking-widest text-neutral-200 ml-auto">
+                  <span className={`text-[8px] uppercase tracking-widest ml-auto transition-colors ${
+                    isActive ? "text-neutral-300" : "text-neutral-200 group-hover/idx:text-[#C80815]/40"
+                  }`}>
                     {slide.sublabel}
                   </span>
                 )}

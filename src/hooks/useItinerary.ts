@@ -8,7 +8,7 @@ import type {
   ScheduleEvent,
   GallerySlot,
 } from "@/types/itinerary";
-import { saveTrip } from "@/lib/tripStore";
+import { saveTrip, loadTrip } from "@/lib/tripStore";
 import rawData from "@/../data/itinerary.json";
 
 // ─── Action types ────────────────────────────────────────
@@ -216,7 +216,8 @@ const defaultData = rawData as unknown as ItineraryData;
 // ─── Hook ────────────────────────────────────────────────
 
 export function useItinerary(tripId?: string, initialData?: ItineraryData) {
-  const startData = initialData ?? defaultData;
+  // Priority: explicit initialData > localStorage > bundled JSON
+  const startData = initialData ?? (tripId ? loadTrip(tripId) : null) ?? defaultData;
   const [state, dispatch] = useReducer(itineraryReducer, startData);
 
   // Auto-save to localStorage on every state change
