@@ -1,0 +1,431 @@
+{
+  "tripTitle": ["EUROPE", "ALPS", "TOUR", "2026"],
+  "travellers": 3,
+  "origin": "Singapore",
+  "cities": {
+    "geneva": {
+      "name": "Geneva",
+      "splitName": ["GEN", "EVA"],
+      "country": "Switzerland",
+      "countryLabel": "SWISS",
+      "lat": 46.2044,
+      "lng": 6.1432,
+      "description": "A cosmopolitan city at the southern tip of Lac Léman, surrounded by the Alps and Jura mountains.",
+      "mapZoom": 12,
+      "language": "French",
+      "currency": "CHF (Swiss Franc)",
+      "transport": "TPG trams & buses. Buy a Tout Genève day pass. Free Transports Publics Genevois card from your hotel.",
+      "mustTry": ["Fondue moitié-moitié", "Filets de perche (lake perch)", "Chocolat chaud at a lakeside café"],
+      "tips": ["Tap water is drinkable everywhere", "Sunday most shops close — plan meals ahead", "Jet d'Eau runs 10AM–sunset, skip if windy"]
+    },
+    "annecy": {
+      "name": "Annecy",
+      "splitName": ["ANN", "ECY"],
+      "country": "France",
+      "countryLabel": "FRANCE",
+      "lat": 45.8992,
+      "lng": 6.1294,
+      "description": "The Venice of the Alps. Crystal-clear canals, pastel-colored houses, and a stunning alpine lake.",
+      "mapZoom": 13,
+      "language": "French",
+      "currency": "EUR (Euro)",
+      "transport": "Small walkable town. FlixBus from Geneva (1hr). Local SIBRA buses if needed.",
+      "mustTry": ["Tartiflette", "Reblochon cheese", "Crêpes from the canal-side stands"],
+      "tips": ["Old Town gets packed by 2PM — go early", "Lake water is swimmable (cleanest in Europe)", "Tuesday & Friday morning markets at Place Sainte-Claire"]
+    },
+    "chamonix": {
+      "name": "Chamonix",
+      "splitName": ["CHAMO", "NIX"],
+      "country": "France",
+      "countryLabel": "FRANCE",
+      "lat": 45.9237,
+      "lng": 6.8694,
+      "description": "At the foot of Mont Blanc. Legendary mountaineering town with cable cars, glaciers, and dramatic peaks.",
+      "mapZoom": 13,
+      "language": "French",
+      "currency": "EUR (Euro)",
+      "transport": "Free Chamonix Bus (Mulet line) for the whole valley. Mont Blanc Multipass covers all cable cars.",
+      "mustTry": ["Raclette", "Génépi liqueur", "Hot wine (vin chaud) après-ski"],
+      "tips": ["Check Aiguille du Midi webcam before going — cloud cover wastes the trip", "Book Montenvers train early (sells out)", "Altitude sickness possible above 3000m — hydrate"]
+    },
+    "brig": {
+      "name": "Brig",
+      "splitName": ["BR", "IG"],
+      "country": "Switzerland",
+      "countryLabel": "SWISS",
+      "lat": 46.3167,
+      "lng": 7.9878,
+      "description": "Historic town at the foot of the Simplon Pass. Gateway to the Rhône Valley and Aletsch Glacier.",
+      "mapZoom": 13,
+      "language": "German (Walliser dialect)",
+      "currency": "CHF (Swiss Franc)",
+      "transport": "SBB trains. Brig is a major rail junction — Glacier Express, Lötschberger, and Simplon routes all pass through.",
+      "mustTry": ["Walliser Teller (dried meat platter)", "Raclette du Valais", "Apricot tart (Walliser Aprikosenwähe)"],
+      "tips": ["Stockalperschloss is free to walk around", "Aletsch Glacier viewpoint at Bettmeralp (cable car from Betten)", "Small town — limited dining after 8PM"]
+    },
+    "chur": {
+      "name": "Chur",
+      "splitName": ["CH", "UR"],
+      "country": "Switzerland",
+      "countryLabel": "SWISS",
+      "lat": 46.8499,
+      "lng": 9.5329,
+      "description": "The oldest city in Switzerland. A charming old town nestled in the Rhine Valley, start of the Glacier Express route.",
+      "mapZoom": 13,
+      "language": "German (some Romansh nearby)",
+      "currency": "CHF (Swiss Franc)",
+      "transport": "Walkable old town. RhB trains to Arosa/Davos. Glacier Express starts/ends here.",
+      "mustTry": ["Capuns (chard-wrapped dumplings)", "Bündnerfleisch (air-dried beef)", "Local Graubünden wines"],
+      "tips": ["Old Town is car-free and tiny — 30 min to walk it all", "Cathedral has 800-year-old stained glass (free entry)", "Brambrüesch cable car from city center for valley views"]
+    },
+    "innsbruck": {
+      "name": "Innsbruck",
+      "splitName": ["INNS", "BRUCK"],
+      "country": "Austria",
+      "countryLabel": "AUSTRIA",
+      "lat": 47.2692,
+      "lng": 11.4041,
+      "description": "Capital of the Alps. Golden Roof, River Inn valley views, and world-class skiing.",
+      "mapZoom": 13,
+      "language": "German (Austrian)",
+      "currency": "EUR (Euro)",
+      "transport": "IVB trams & buses. Innsbruck Card covers transport + cable cars + museums. Nordkette funicular from city center.",
+      "mustTry": ["Tiroler Gröstl (potato-meat hash)", "Kaiserschmarrn (shredded pancake)", "Strudel at Café Sacher"],
+      "tips": ["Nordkette: city center to 2300m in 20 min", "Maria-Theresien-Straße for the mountain-framed photo", "Stubai Glacier is 45 min by bus — check snow conditions"]
+    },
+    "mayrhofen": {
+      "name": "Mayrhofen",
+      "splitName": ["MAYR", "HOFEN"],
+      "country": "Austria",
+      "countryLabel": "AUSTRIA",
+      "lat": 47.1594,
+      "lng": 11.8614,
+      "description": "Heart of the Zillertal Valley. Hintertux Glacier and the Penken alpine coaster.",
+      "mapZoom": 13,
+      "language": "German (Austrian/Tyrolean)",
+      "currency": "EUR (Euro)",
+      "transport": "Zillertalbahn narrow-gauge train from Jenbach. Free ski bus in valley. Penken & Ahorn cable cars from town.",
+      "mustTry": ["Kaspressknödel (cheese dumplings)", "Zillertal beer", "Germknödel (yeast dumpling with plum jam)"],
+      "tips": ["Hintertux Glacier is year-round snow — bring layers", "Maisi Flitzer alpine coaster runs even in spring", "Valley is narrow — sunset happens early behind mountains"]
+    },
+    "zellamsee": {
+      "name": "Zell am See",
+      "splitName": ["ZELL AM", "SEE"],
+      "country": "Austria",
+      "countryLabel": "AUSTRIA",
+      "lat": 47.3239,
+      "lng": 12.7964,
+      "description": "Lakeside paradise at the edge of Hohe Tauern National Park. Lake + glacier skiing in one day.",
+      "mapZoom": 13,
+      "language": "German (Austrian)",
+      "currency": "EUR (Euro)",
+      "transport": "Pinzgauer Lokalbahn to Krimml. Postbus for Kaprun. Schmittenhöhe & Kitzsteinhorn cable cars.",
+      "mustTry": ["Pinzgauer Kasnocken (cheese spaetzle)", "Salzburger Nockerl (sweet soufflé)", "Fish from Lake Zell"],
+      "tips": ["Kitzsteinhorn (Kaprun) has snow year-round", "Lake walk is ~5km flat loop", "Schmittenhöhe summit for best lake panorama"]
+    },
+    "vienna": {
+      "name": "Vienna",
+      "splitName": ["VIEN", "NA"],
+      "country": "Austria",
+      "countryLabel": "AUSTRIA",
+      "lat": 48.2082,
+      "lng": 16.3738,
+      "description": "Imperial grandeur meets modern cool. Coffee houses, palaces, and culture.",
+      "mapZoom": 12,
+      "language": "German (Austrian)",
+      "currency": "EUR (Euro)",
+      "transport": "U-Bahn (metro), trams, buses. Buy a 24/48hr Wiener Linien pass. Everything central is walkable.",
+      "mustTry": ["Wiener Schnitzel", "Sachertorte at Café Central", "Einspänner coffee (espresso with whipped cream)"],
+      "tips": ["Café Central opens at 10AM — queue before", "Ringstrasse is a loop — tram 1 or 2 circles it", "Naschmarkt for street food and cheap lunch"]
+    }
+  },
+  "days": [
+    {
+      "dayNumber": 1,
+      "date": "2026-03-26",
+      "weekday": "Thursday",
+      "cityId": "geneva",
+      "route": "SINGAPORE ✈ GENEVA",
+      "accommodation": "B&B HOTEL Geneva Airport",
+      "events": [
+        { "time": "12:05 AM", "title": "Flight from SIN-T2", "type": "transport" },
+        { "time": "8:05AM", "title": "Land at GEN", "type": "transport" },
+        { "time": "9:00AM", "title": "Leave luggage @ B&B HOTEL Geneva", "type": "accommodation" },
+        { "time": "10:30", "title": "Brunch @ Cottage Cafe", "type": "food", "highlight": true },
+        { "time": "12:00PM", "title": "Geneva Lake", "type": "activity", "highlight": true },
+        { "time": "2:00PM", "title": "Check-in + Siesta", "type": "rest" },
+        { "time": "4:00PM", "title": "Old Town", "type": "activity" },
+        { "time": "7:00PM", "title": "Dinner", "type": "food" }
+      ],
+      "gallery": [
+        { "url": null, "caption": null, "size": "large", "slot": "A" },
+        { "url": null, "caption": "BRUNCH @ COTTAGE CAFE", "size": "medium", "slot": "B" },
+        { "url": null, "caption": "SPRING BLOOMS", "size": "medium", "slot": "C" },
+        { "url": null, "caption": null, "size": "small", "slot": "D" },
+        { "url": null, "caption": null, "size": "large", "slot": "E" }
+      ]
+    },
+    {
+      "dayNumber": 2,
+      "date": "2026-03-27",
+      "weekday": "Friday",
+      "cityId": "annecy",
+      "route": "GENEVA 🚌 ANNECY 🚌 GENEVA",
+      "accommodation": "B&B HOTEL Geneva Airport",
+      "events": [
+        { "time": "11:40AM", "title": "Geneva → Annecy (Flix Bus)", "type": "transport" },
+        { "time": "12:30PM", "title": "Arrive Annecy", "type": "transport" },
+        { "time": "1:00PM", "title": "Brunch @ Boulangerie", "type": "food", "highlight": true },
+        { "time": "2:00PM", "title": "Old Town stroll", "type": "activity", "highlight": true },
+        { "time": "3:30PM", "title": "Lake Annecy", "type": "activity", "highlight": true },
+        { "time": "7:00PM", "title": "Return to Geneva (Flix Bus)", "type": "transport" }
+      ],
+      "gallery": [
+        { "url": null, "caption": null, "size": "large", "slot": "A" },
+        { "url": null, "caption": null, "size": "medium", "slot": "B" },
+        { "url": null, "caption": "OLD TOWN", "size": "medium", "slot": "C" },
+        { "url": null, "caption": "BRUNCH @", "size": "small", "slot": "D" }
+      ]
+    },
+    {
+      "dayNumber": 3,
+      "date": "2026-03-28",
+      "weekday": "Saturday",
+      "cityId": "chamonix",
+      "route": "GENEVA → CHAMONIX",
+      "accommodation": "Hôtel Le Chamonix",
+      "events": [
+        { "time": "3:30PM", "title": "Cable Car to Salève", "type": "activity", "highlight": true },
+        { "time": "5:05PM", "title": "BCN → GVA", "type": "transport" },
+        { "time": "6:30PM", "title": "Geneva → Chamonix (Swiss Tour)", "type": "transport" },
+        { "time": "8:30PM", "title": "Check in & settle", "type": "accommodation" }
+      ],
+      "gallery": [
+        { "url": null, "caption": "CABLE CAR TO SALÈVE", "size": "large", "slot": "A" },
+        { "url": null, "caption": null, "size": "medium", "slot": "B" },
+        { "url": null, "caption": null, "size": "medium", "slot": "C" }
+      ]
+    },
+    {
+      "dayNumber": 4,
+      "date": "2026-03-29",
+      "weekday": "Sunday",
+      "cityId": "chamonix",
+      "route": "CHAMONIX",
+      "accommodation": "Hôtel Le Chamonix",
+      "events": [
+        { "time": "12:00PM", "title": "Leave hotel", "type": "activity" },
+        { "time": "1:00PM", "title": "Old Town stroll + valley views", "type": "activity", "highlight": true },
+        { "time": "2:30PM", "title": "Les Houches Cable Car", "type": "activity" },
+        { "time": "4:00PM", "title": "Aiguille du Midi (if clear)", "type": "activity", "highlight": true }
+      ],
+      "gallery": [
+        { "url": null, "caption": "AIGUILLE DU MIDI", "size": "large", "slot": "A" },
+        { "url": null, "caption": null, "size": "medium", "slot": "B" },
+        { "url": null, "caption": null, "size": "medium", "slot": "C" }
+      ]
+    },
+    {
+      "dayNumber": 5,
+      "date": "2026-03-30",
+      "weekday": "Monday",
+      "cityId": "chamonix",
+      "route": "CHAMONIX",
+      "accommodation": "Hôtel Le Chamonix",
+      "events": [
+        { "time": "9:00AM", "title": "Brévent-Flégère", "type": "activity", "highlight": true },
+        { "time": "12:00PM", "title": "Montenvers → Mer de Glace", "type": "activity", "highlight": true },
+        { "time": "3:00PM", "title": "Ski / Snowboard", "type": "activity", "highlight": true },
+        { "time": "5:00PM", "title": "Rhône Valley walk", "type": "activity" }
+      ],
+      "gallery": [
+        { "url": null, "caption": "MER DE GLACE", "size": "large", "slot": "A" },
+        { "url": null, "caption": "BRÉVENT-FLÉGÈRE", "size": "medium", "slot": "B" },
+        { "url": null, "caption": "SKI / SNOWBOARD", "size": "medium", "slot": "C" }
+      ]
+    },
+    {
+      "dayNumber": 6,
+      "date": "2026-03-31",
+      "weekday": "Tuesday",
+      "cityId": "brig",
+      "route": "CHAMONIX → VALLORCINE → MARTIGNY → BRIG",
+      "accommodation": "Hotel de Londres (Attic)",
+      "events": [
+        { "time": "10:11AM", "title": "Chamonix → Vallorcine (TER 18809)", "type": "transport" },
+        { "time": "12:13PM", "title": "Vallorcine → Martigny", "type": "transport" },
+        { "time": "1:17PM", "title": "Martigny → Brig (R 91 6217)", "type": "transport" },
+        { "time": "3:00PM", "title": "Aletsch Glacier / Lötchberg Pass", "type": "activity", "highlight": true }
+      ],
+      "gallery": [
+        { "url": null, "caption": "SCENIC TRAIN", "size": "large", "slot": "A" },
+        { "url": null, "caption": "ALETSCH GLACIER", "size": "medium", "slot": "B" },
+        { "url": null, "caption": null, "size": "medium", "slot": "C" }
+      ]
+    },
+    {
+      "dayNumber": 7,
+      "date": "2026-04-01",
+      "weekday": "Wednesday",
+      "cityId": "chur",
+      "route": "BRIG → CHUR (GLACIER EXPRESS)",
+      "accommodation": "Bogentrakt Hostel",
+      "events": [
+        { "time": "10:14AM", "title": "Glacier Express (Brig → Chur)", "type": "transport", "highlight": true },
+        { "time": "2:25PM", "title": "Arrive Chur", "type": "transport" },
+        { "time": "3:00PM", "title": "Ratisches Museum / Bierhalle", "type": "activity" },
+        { "time": "5:00PM", "title": "Old Town + Stadturm (sunset)", "type": "activity", "highlight": true }
+      ],
+      "gallery": [
+        { "url": null, "caption": "GLACIER EXPRESS", "size": "large", "slot": "A" },
+        { "url": null, "caption": null, "size": "medium", "slot": "B" },
+        { "url": null, "caption": null, "size": "medium", "slot": "C" }
+      ]
+    },
+    {
+      "dayNumber": 8,
+      "date": "2026-04-02",
+      "weekday": "Thursday",
+      "cityId": "innsbruck",
+      "route": "CHUR → BUCHS → FELDKIRCH → INNSBRUCK",
+      "accommodation": "Motel One Innsbruck",
+      "events": [
+        { "time": "11:42AM", "title": "Chur → Buchs SG (IR 13)", "type": "transport" },
+        { "time": "12:33PM", "title": "Buchs SG → Feldkirch S2", "type": "transport" },
+        { "time": "1:17PM", "title": "Feldkirch → Innsbruck RJX", "type": "transport" },
+        { "time": "4:00PM", "title": "Explore Innsbruck", "type": "activity", "highlight": true }
+      ],
+      "gallery": [
+        { "url": null, "caption": null, "size": "large", "slot": "A" },
+        { "url": null, "caption": null, "size": "medium", "slot": "B" },
+        { "url": null, "caption": null, "size": "medium", "slot": "C" }
+      ]
+    },
+    {
+      "dayNumber": 9,
+      "date": "2026-04-03",
+      "weekday": "Friday",
+      "cityId": "innsbruck",
+      "route": "INNSBRUCK",
+      "accommodation": "Motel One Innsbruck",
+      "events": [
+        { "time": "10:00AM", "title": "Stubai Glacier / Nordkette", "type": "activity", "highlight": true },
+        { "time": "2:00PM", "title": "Ski / Snowboard", "type": "activity", "highlight": true },
+        { "time": "5:00PM", "title": "Explore Town", "type": "activity" }
+      ],
+      "gallery": [
+        { "url": null, "caption": "NORDKETTE", "size": "large", "slot": "A" },
+        { "url": null, "caption": "SKI / SNOWBOARD", "size": "medium", "slot": "B" },
+        { "url": null, "caption": null, "size": "medium", "slot": "C" }
+      ]
+    },
+    {
+      "dayNumber": 10,
+      "date": "2026-04-04",
+      "weekday": "Saturday",
+      "cityId": "mayrhofen",
+      "route": "INNSBRUCK → JENBACH → MAYRHOFEN",
+      "accommodation": "Hotel Garni Jennewein",
+      "events": [
+        { "time": "9:00AM", "title": "Breakfast @ Motel One", "type": "food" },
+        { "time": "3:20PM", "title": "Innsbruck → Jenbach (R 157)", "type": "transport" },
+        { "time": "4:11PM", "title": "Arrive Mayrhofen", "type": "transport" },
+        { "time": "5:00PM", "title": "Explore Town", "type": "activity", "highlight": true }
+      ],
+      "gallery": [
+        { "url": null, "caption": null, "size": "large", "slot": "A" },
+        { "url": null, "caption": "ZILLERTAL VALLEY", "size": "medium", "slot": "B" },
+        { "url": null, "caption": null, "size": "medium", "slot": "C" }
+      ]
+    },
+    {
+      "dayNumber": 11,
+      "date": "2026-04-05",
+      "weekday": "Sunday",
+      "cityId": "mayrhofen",
+      "route": "MAYRHOFEN",
+      "accommodation": "Hotel Garni Jennewein",
+      "events": [
+        { "time": "10:00AM", "title": "Hintertux Glacier (Ice Palace)", "type": "activity", "highlight": true },
+        { "time": "12:15PM", "title": "Penken / Ahorn Cable Cars", "type": "activity", "highlight": true },
+        { "time": "3:00PM", "title": "Maisi Flitzer (Alpine Coaster)", "type": "activity", "highlight": true }
+      ],
+      "gallery": [
+        { "url": null, "caption": "HINTERTUX GLACIER", "size": "large", "slot": "A" },
+        { "url": null, "caption": "PENKEN", "size": "medium", "slot": "B" },
+        { "url": null, "caption": "ALPINE COASTER", "size": "medium", "slot": "C" }
+      ]
+    },
+    {
+      "dayNumber": 12,
+      "date": "2026-04-06",
+      "weekday": "Monday",
+      "cityId": "zellamsee",
+      "route": "MAYRHOFEN → ZELL AM SEE",
+      "accommodation": "AlpenParks Hotel Central",
+      "events": [
+        { "time": "11:19AM", "title": "Mayrhofen → Zell am See", "type": "transport" },
+        { "time": "12:10PM", "title": "Arrive Zell am See", "type": "transport" },
+        { "time": "1:00PM", "title": "Walk around Lake & Old Town", "type": "activity", "highlight": true },
+        { "time": "4:00PM", "title": "Schmittenhöhe Cable Car", "type": "activity", "highlight": true }
+      ],
+      "gallery": [
+        { "url": null, "caption": null, "size": "large", "slot": "A" },
+        { "url": null, "caption": "SCHMITTENHÖHE", "size": "medium", "slot": "B" },
+        { "url": null, "caption": null, "size": "medium", "slot": "C" }
+      ]
+    },
+    {
+      "dayNumber": 13,
+      "date": "2026-04-07",
+      "weekday": "Tuesday",
+      "cityId": "zellamsee",
+      "route": "ZELL AM SEE",
+      "accommodation": "AlpenParks Hotel Central",
+      "events": [
+        { "time": "10:00AM", "title": "cityXpress Cable Car", "type": "activity", "highlight": true },
+        { "time": "2:00PM", "title": "Ski / Snowboard", "type": "activity", "highlight": true }
+      ],
+      "gallery": [
+        { "url": null, "caption": "SKI / SNOWBOARD", "size": "large", "slot": "A" },
+        { "url": null, "caption": null, "size": "medium", "slot": "B" }
+      ]
+    },
+    {
+      "dayNumber": 14,
+      "date": "2026-04-08",
+      "weekday": "Wednesday",
+      "cityId": "vienna",
+      "route": "ZELL AM SEE → SALZBURG → VIENNA",
+      "accommodation": "The Social Hub Vienna",
+      "events": [
+        { "time": "10:15AM", "title": "Zell am See → Schwarzach", "type": "transport" },
+        { "time": "10:55AM", "title": "Schwarzach → Salzburg (ICE)", "type": "transport" },
+        { "time": "12:07PM", "title": "Salzburg → Wien Hbf", "type": "transport" },
+        { "time": "3:00PM", "title": "Ringstrasse / Hofburg", "type": "activity", "highlight": true },
+        { "time": "5:00PM", "title": "St. Stephen's Cathedral (sunset)", "type": "activity", "highlight": true }
+      ],
+      "gallery": [
+        { "url": null, "caption": "RINGSTRASSE", "size": "large", "slot": "A" },
+        { "url": null, "caption": "ST. STEPHEN'S", "size": "medium", "slot": "B" },
+        { "url": null, "caption": "HOFBURG", "size": "medium", "slot": "C" }
+      ]
+    },
+    {
+      "dayNumber": 15,
+      "date": "2026-04-09",
+      "weekday": "Thursday",
+      "cityId": "vienna",
+      "route": "VIENNA ✈ SINGAPORE",
+      "accommodation": "The Social Hub Vienna",
+      "events": [
+        { "time": "10:00AM", "title": "Cafe Central", "type": "food", "highlight": true },
+        { "time": "3:30PM", "title": "VIE → SIN flight", "type": "transport" }
+      ],
+      "gallery": [
+        { "url": null, "caption": "CAFE CENTRAL", "size": "large", "slot": "A" },
+        { "url": null, "caption": null, "size": "medium", "slot": "B" }
+      ]
+    }
+  ]
+}

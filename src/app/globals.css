@@ -1,0 +1,84 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --bg: #ffffff;
+  --text: #1a1a1a;
+  --text-light: #777777;
+  --accent-gold: #c4973b;
+  --accent-blue: #4a7c9b;
+  --accent-green: #8b9d83;
+  --accent-purple: #8b7b9b;
+  --accent-gray: #d0d0d0;
+  --slot-empty: #f5f5f5;
+  --slot-border: #cccccc;
+}
+
+html {
+  scroll-behavior: smooth;
+}
+
+body {
+  font-family: "DM Sans", sans-serif;
+  color: var(--text);
+  background: var(--bg);
+}
+
+/* Editable text hover hint */
+.editable-hint {
+  border-bottom: 2px solid transparent;
+  cursor: pointer;
+}
+.editable-hint:hover {
+  border-bottom-color: var(--text);
+}
+
+/* Editable text active input */
+.editable-input {
+  border: none;
+  border-bottom: 2px solid var(--text);
+  outline: none;
+  background: transparent;
+  font: inherit;
+  color: inherit;
+  padding: 0;
+}
+
+/* Empty gallery slot — hard edges, no rounding */
+.gallery-slot-empty {
+  border: 2px dashed var(--slot-border);
+  background: var(--slot-empty);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+.gallery-slot-empty:hover {
+  border-color: var(--text);
+  background: #eaeaea;
+}
+
+/* Event type accent left-border */
+.event-food { border-left: 3px solid var(--accent-gold); padding-left: 8px; }
+.event-transport { border-left: 3px solid var(--accent-blue); padding-left: 8px; }
+.event-activity { border-left: 3px solid var(--accent-green); padding-left: 8px; }
+.event-accommodation { border-left: 3px solid var(--accent-purple); padding-left: 8px; }
+.event-rest { border-left: 3px solid var(--accent-gray); padding-left: 8px; }
+
+.event-highlight {
+  background: #f5f5f0;
+  padding: 4px 8px;
+  margin: -4px -8px;
+}
+
+/* Retro mono label — light blue highlight */
+.retro-label {
+  font-family: "DM Mono", monospace;
+  background: #dce6f0;
+  color: #5a6a7a;
+  padding: 2px 6px;
+  font-size: 11px;
+  letter-spacing: 0.15em;
+  text-transform: uppercase;
+}
