@@ -2,26 +2,6 @@
 
 An editable trip itinerary website. Click to edit any text, search images to fill gallery slots, live weather per destination.
 
-## Quick Start
-
-```bash
-# 1. Extract and enter the project
-cd europe-alps-tour
-
-# 2. Run setup (creates Next.js project, installs deps)
-bash setup.sh
-
-# 3. Add an image search API key to .env.local
-#    (Google CSE, Unsplash, or Pexels — pick one)
-
-# 4. Build with Claude Code
-claude
-# → "Read CLAUDE.md and build the tool step by step"
-
-# 5. Run
-npm run dev
-```
-
 ## How It Works
 
 - **All trip data** lives in `data/itinerary.json`
