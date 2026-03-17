@@ -15,7 +15,7 @@ interface SlideIndexProps {
 
 export default function SlideIndex({ slides }: SlideIndexProps) {
   const [activeId, setActiveId] = useState<string>("");
-  const [hovered, setHovered] = useState(false);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -43,60 +43,98 @@ export default function SlideIndex({ slides }: SlideIndexProps) {
   };
 
   return (
-    <div
-      className="fixed right-0 top-0 bottom-0 z-50 flex items-center justify-end"
-      onMouseEnter={() => setHovered(true)}
-      onMouseLeave={() => setHovered(false)}
-    >
-      {/* Gradient backdrop on hover */}
-      <div
-        className={`absolute inset-y-0 right-0 transition-opacity duration-200 pointer-events-none ${
-          hovered ? "opacity-100" : "opacity-0"
+    <>
+      {/* Pull tab — always visible on right edge */}
+      <button
+        onClick={() => setOpen(true)}
+        onMouseEnter={() => setOpen(true)}
+        className={`fixed right-0 top-1/2 -translate-y-1/2 z-50 bg-black text-white w-6 h-12 flex items-center justify-center transition-opacity ${
+          open ? "opacity-0 pointer-events-none" : "opacity-100 hover:opacity-100"
         }`}
-        style={{
-          width: "220px",
-          background: "linear-gradient(to right, transparent, rgba(255,255,255,0.5) 50%)",
-        }}
-      />
+        title="Open index"
+      >
+        <span className="text-[10px]">&larr;</span>
+      </button>
 
-      {/* Dot nav — right aligned */}
-      <div className="relative flex flex-col items-end gap-1.5 pr-4">
-        {slides.map((slide) => {
-          const isActive = activeId === slide.id;
-          return (
-            <button
-              key={slide.id}
-              onClick={() => scrollTo(slide.id)}
-              className="flex items-center gap-2 group/dot"
-            >
-              {/* Label — shows on hover */}
-              <span
-                className={`text-[9px] font-bold uppercase tracking-widest whitespace-nowrap transition-all duration-200 text-black group-hover/dot:text-[#C80815] ${
-                  hovered ? "opacity-100" : "opacity-0 w-0 overflow-hidden"
+      {/* Backdrop — click to close */}
+      {open && (
+        <div
+          className="fixed inset-0 z-50"
+          onClick={() => setOpen(false)}
+        />
+      )}
+
+      {/* Slide-in sidebar */}
+      <div
+        className={`fixed right-0 top-0 bottom-0 z-50 bg-white border-l-2 border-black w-52 transition-transform duration-200 ease-out overflow-y-auto ${
+          open ? "translate-x-0" : "translate-x-full"
+        }`}
+        onMouseLeave={() => setOpen(false)}
+      >
+        {/* Header */}
+        <div className="sticky top-0 bg-white border-b border-neutral-200 px-4 py-2.5 flex items-center justify-between">
+          <span className="text-[8px] font-bold uppercase tracking-widest text-neutral-400">
+            Index
+          </span>
+          <button
+            onClick={() => setOpen(false)}
+            className="text-neutral-300 hover:text-black text-xs"
+          >
+            &times;
+          </button>
+        </div>
+
+        {/* Nav items */}
+        <div className="py-2 px-1.5">
+          {slides.map((slide) => {
+            const isActive = activeId === slide.id;
+            const isCity = slide.type === "city" || slide.type === "cover";
+
+            return (
+              <button
+                key={slide.id}
+                onClick={() => { scrollTo(slide.id); setOpen(false); }}
+                className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-left transition-colors rounded-sm hover:text-[#C80815] ${
+                  isActive
+                    ? "bg-neutral-50"
+                    : ""
                 }`}
               >
-                {slide.label}
-                {slide.sublabel && (
-                  <span className="ml-1 opacity-40 group-hover/dot:opacity-100">{slide.sublabel}</span>
-                )}
-              </span>
+                {/* Dot */}
+                <span
+                  className={`block rounded-full shrink-0 ${
+                    isCity
+                      ? isActive
+                        ? "w-2 h-2 bg-black"
+                        : "w-1.5 h-1.5 bg-neutral-300"
+                      : isActive
+                      ? "w-1.5 h-1.5 bg-[#C80815]"
+                      : "w-1 h-1 bg-neutral-200"
+                  }`}
+                />
 
-              {/* Dot */}
-              <span
-                className={`block rounded-full shrink-0 transition-all ${
-                  slide.type === "city" || slide.type === "cover"
-                    ? isActive
-                      ? "w-3 h-3 bg-black"
-                      : "w-2.5 h-2.5 bg-neutral-300 group-hover/dot:bg-[#C80815]"
-                    : isActive
-                    ? "w-2 h-2 bg-black"
-                    : "w-1.5 h-1.5 bg-neutral-300 group-hover/dot:bg-[#C80815]"
-                }`}
-              />
-            </button>
-          );
-        })}
+                {/* Label */}
+                <span
+                  className={`text-[6px] font-bold uppercase tracking-widest ${
+                    isCity
+                      ? isActive ? "text-black" : "text-neutral-500"
+                      : isActive ? "text-black" : "text-neutral-400"
+                  }`}
+                >
+                  {slide.label}
+                </span>
+
+                {/* Sublabel */}
+                {slide.sublabel && (
+                  <span className="text-[7px] uppercase tracking-widest text-neutral-200 ml-auto">
+                    {slide.sublabel}
+                  </span>
+                )}
+              </button>
+            );
+          })}
+        </div>
       </div>
-    </div>
+    </>
   );
 }

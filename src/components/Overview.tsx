@@ -94,7 +94,7 @@ export default function Overview({ data, onClose, onMoveDay, onRemoveDay }: Over
         <div className="px-5 pb-16 space-y-3">
           {data.days.map((day, idx) => {
             const city = data.cities[day.cityId];
-            const dateObj = new Date(day.date + "T00:00:00");
+            const dateObj = new Date(day.date + "T12:00:00");
             const dateNum = dateObj.getDate();
             const monthStr = dateObj
               .toLocaleString("en-GB", { month: "short" })

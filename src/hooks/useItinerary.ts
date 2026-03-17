@@ -22,6 +22,8 @@ type Action =
   | { type: "ADD_GALLERY_SLOT"; dayIndex: number; slot: GallerySlot }
   | { type: "REMOVE_GALLERY_SLOT"; dayIndex: number; slotIndex: number }
   | { type: "UPDATE_DAY_FIELD"; dayIndex: number; field: keyof DayData; value: string }
+  | { type: "UPDATE_DAY_DATE"; dayIndex: number; date: string }
+  | { type: "UPDATE_DAY_WEATHER_LOC"; dayIndex: number; lat: number; lng: number }
   | { type: "ADD_DAY"; day: DayData }
   | { type: "REMOVE_DAY"; dayIndex: number }
   | { type: "MOVE_DAY"; fromIndex: number; toIndex: number }
@@ -36,18 +38,25 @@ type Action =
 
 const WEEKDAYS = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
 
+/** Format a local Date as YYYY-MM-DD without UTC shift */
+function toLocalDateStr(d: Date): string {
+  const y = d.getFullYear();
+  const m = String(d.getMonth() + 1).padStart(2, "0");
+  const day = String(d.getDate()).padStart(2, "0");
+  return `${y}-${m}-${day}`;
+}
+
 /** Renumber days sequentially and recalculate dates from the first day's date */
 function renumberDays(days: DayData[]): DayData[] {
   if (days.length === 0) return days;
-  const baseDate = new Date(days[0].date + "T00:00:00");
+  const baseDate = new Date(days[0].date + "T12:00:00");
   return days.map((d, i) => {
     const dt = new Date(baseDate);
     dt.setDate(dt.getDate() + i);
-    const dateStr = dt.toISOString().split("T")[0];
     return {
       ...d,
       dayNumber: i + 1,
-      date: dateStr,
+      date: toLocalDateStr(dt),
       weekday: WEEKDAYS[dt.getDay()],
     };
   });
@@ -124,6 +133,25 @@ function itineraryReducer(state: ItineraryData, action: Action): ItineraryData {
       const days = [...state.days];
       const day = { ...days[action.dayIndex], [action.field]: action.value };
       days[action.dayIndex] = day;
+      return { ...state, days };
+    }
+
+    case "UPDATE_DAY_DATE": {
+      // Set the date for this day, then cascade all subsequent days
+      // Use T12:00:00 (noon) to avoid timezone boundary issues
+      const days = [...state.days];
+      const baseDate = new Date(action.date + "T12:00:00");
+      for (let i = action.dayIndex; i < days.length; i++) {
+        const dt = new Date(baseDate);
+        dt.setDate(dt.getDate() + (i - action.dayIndex));
+        days[i] = { ...days[i], date: toLocalDateStr(dt), weekday: WEEKDAYS[dt.getDay()] };
+      }
+      return { ...state, days };
+    }
+
+    case "UPDATE_DAY_WEATHER_LOC": {
+      const days = [...state.days];
+      days[action.dayIndex] = { ...days[action.dayIndex], weatherLat: action.lat, weatherLng: action.lng };
       return { ...state, days };
     }
 
@@ -251,6 +279,18 @@ export function useItinerary(tripId?: string, initialData?: ItineraryData) {
     []
   );
 
+  const updateDayDate = useCallback(
+    (dayIndex: number, date: string) =>
+      dispatch({ type: "UPDATE_DAY_DATE", dayIndex, date }),
+    []
+  );
+
+  const updateDayWeatherLoc = useCallback(
+    (dayIndex: number, lat: number, lng: number) =>
+      dispatch({ type: "UPDATE_DAY_WEATHER_LOC", dayIndex, lat, lng }),
+    []
+  );
+
   const addDay = useCallback((day: DayData) => dispatch({ type: "ADD_DAY", day }), []);
 
   const removeDay = useCallback(
@@ -331,6 +371,8 @@ export function useItinerary(tripId?: string, initialData?: ItineraryData) {
     addGallerySlot,
     removeGallerySlot,
     updateDayField,
+    updateDayDate,
+    updateDayWeatherLoc,
     addDay,
     removeDay,
     moveDay,

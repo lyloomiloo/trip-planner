@@ -10,8 +10,9 @@ const config: Config = {
     extend: {
       fontFamily: {
         display: ["'DM Sans'", "sans-serif"],
-        body: ["'DM Sans'", "sans-serif"],
+        body: ["'DM Mono'", "monospace"],
         mono: ["'DM Mono'", "monospace"],
+        serif: ["'Playfair Display'", "serif"],
       },
       colors: {
         text: { DEFAULT: "#2D2D2D", light: "#888888" },

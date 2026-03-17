@@ -9,7 +9,7 @@ export async function getWeather(
 ): Promise<WeatherData | null> {
   try {
     const today = new Date();
-    const target = new Date(date + "T00:00:00");
+    const target = new Date(date + "T12:00:00");
     const diffDays = Math.ceil((target.getTime() - today.getTime()) / 86400000);
 
     // Try forecast API if within 16 days

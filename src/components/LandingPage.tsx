@@ -27,7 +27,7 @@ export default function LandingPage({ onSelectTrip, onStartNew }: LandingPagePro
   // Format date for display: "Mar 2026"
   const formatMonth = (dateStr: string) => {
     if (!dateStr) return "";
-    const d = new Date(dateStr + "T00:00:00");
+    const d = new Date(dateStr + "T12:00:00");
     return d.toLocaleDateString("en-US", { month: "short", year: "numeric" }).toUpperCase();
   };
 

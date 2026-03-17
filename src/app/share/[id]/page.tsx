@@ -1,10 +1,15 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { loadTrip } from "@/lib/tripStore";
 import type { ItineraryData } from "@/types/itinerary";
+import CoverSlide from "@/components/CoverSlide";
+import CityIntroSlide from "@/components/CityIntroSlide";
+import DaySlide from "@/components/DaySlide";
+import SlideIndex from "@/components/SlideIndex";
 
+/** Shared view — permanently locked, no editing capabilities */
 export default function SharePage() {
   const params = useParams();
   const router = useRouter();
@@ -20,6 +25,55 @@ export default function SharePage() {
       setNotFound(true);
     }
   }, [tripId]);
+
+  // Build flat slide list (same logic as main page)
+  const flatSlides = useMemo(() => {
+    if (!trip) return [];
+    const slides: ({ type: "city-intro"; cityId: string } | { type: "day"; dayIndex: number })[] = [];
+    let lastCityId: string | null = null;
+    trip.days.forEach((day, i) => {
+      if (day.cityId !== lastCityId) {
+        slides.push({ type: "city-intro", cityId: day.cityId });
+        lastCityId = day.cityId;
+      }
+      slides.push({ type: "day", dayIndex: i });
+    });
+    return slides;
+  }, [trip]);
+
+  // Slide index entries
+  const slideIndexEntries = useMemo(() => {
+    if (!trip) return [];
+    const entries: { id: string; label: string; sublabel?: string; type: "cover" | "city" | "day" }[] = [
+      { id: "slide-cover", label: "Cover", type: "cover" },
+    ];
+    flatSlides.forEach((slide, i) => {
+      if (slide.type === "city-intro") {
+        const city = trip.cities[slide.cityId];
+        entries.push({
+          id: `slide-city-${slide.cityId}-${i}`,
+          label: city?.name ?? slide.cityId,
+          type: "city",
+        });
+      } else {
+        const day = trip.days[slide.dayIndex];
+        entries.push({
+          id: `slide-day-${slide.dayIndex}`,
+          label: `Day ${day.dayNumber}`,
+          sublabel: day.cityId,
+          type: "day",
+        });
+      }
+    });
+    return entries;
+  }, [flatSlides, trip]);
+
+  // Longest city name for scaling
+  const maxCityNameLength = useMemo(() => {
+    if (!trip) return 1;
+    const lengths = Object.values(trip.cities).map((c) => c.name.length);
+    return Math.max(...lengths, 1);
+  }, [trip]);
 
   if (notFound) {
     return (
@@ -52,64 +106,83 @@ export default function SharePage() {
     );
   }
 
-  const title = trip.tripTitle.join(" ");
-  const firstDay = trip.days[0];
-  const lastDay = trip.days[trip.days.length - 1];
-  const cityNames = Object.values(trip.cities).map((c) => c.name).join(" \u2192 ");
+  // No-op handlers for DaySlide's required props (all editing is disabled via locked=true)
+  const noop = () => {};
+  const noop2 = (_a: number, _b: number) => {};
+  const noop3 = (_a: number, _b: number, _c: number) => {};
 
   return (
-    <div className="min-h-screen bg-white flex items-center justify-center p-6">
-      <div className="w-full max-w-md text-center">
-        {/* Trip title */}
-        <h1 className="text-4xl font-black uppercase tracking-tight leading-tight mb-2">
-          {title}
-        </h1>
+    <main className="min-h-screen bg-white">
+      {/* Minimal view-only toolbar */}
+      <div
+        className="sticky top-0 z-40 bg-white border-b-2 border-black flex items-center justify-between px-6"
+        style={{ height: "var(--toolbar-h)" }}
+      >
+        <button
+          onClick={() => router.push("/")}
+          className="text-xs font-bold uppercase tracking-widest text-neutral-400 hover:text-black"
+        >
+          &larr; Home
+        </button>
 
-        {/* Trip meta */}
-        <p className="text-[10px] text-neutral-400 uppercase tracking-widest mb-1">
-          {trip.days.length} days &middot;{" "}
-          {Object.keys(trip.cities).length} cities
-        </p>
-        {firstDay && lastDay && (
-          <p className="text-[10px] text-neutral-400 uppercase tracking-widest mb-1">
-            {firstDay.date} &rarr; {lastDay.date}
-          </p>
-        )}
-        <p className="text-[10px] text-neutral-300 uppercase tracking-widest mb-10">
-          {cityNames}
-        </p>
+        <div className="flex items-center gap-4">
+          <span className="text-[10px] font-bold uppercase tracking-widest text-[#C80815]">
+            {"\u{1F512}"} View Only
+          </span>
+        </div>
+      </div>
 
-        {/* Divider */}
-        <div className="w-12 h-0.5 bg-black mx-auto mb-10" />
+      {/* Slide index */}
+      <SlideIndex slides={slideIndexEntries} />
 
-        {/* Two buttons */}
-        <div className="space-y-4">
-          <button
-            onClick={() => {
-              // Navigate to main app and open the trip in itinerary view
-              window.location.href = `/?trip=${tripId}&view=itinerary`;
-            }}
-            className="w-full bg-black text-white text-sm font-bold uppercase tracking-widest py-4 hover:bg-neutral-800 transition-colors"
-          >
-            Itinerary
-          </button>
-
-          <button
-            onClick={() => {
-              // Navigate to main app and open the trip in overview view
-              window.location.href = `/?trip=${tripId}&view=overview`;
-            }}
-            className="w-full bg-white text-black text-sm font-bold uppercase tracking-widest py-4 border-2 border-black hover:bg-neutral-50 transition-colors"
-          >
-            Overview
-          </button>
+      {/* All slides in locked mode */}
+      <div className="locked-itinerary">
+        {/* Cover */}
+        <div id="slide-cover" data-slide>
+          <CoverSlide data={trip} />
         </div>
 
-        {/* Footer */}
-        <p className="text-[8px] text-neutral-300 uppercase tracking-widest mt-12">
-          Trip data stored locally in your browser
-        </p>
+        {/* City intros + Day slides */}
+        {flatSlides.map((slide, i) => {
+          if (slide.type === "city-intro") {
+            const city = trip.cities[slide.cityId];
+            if (!city) return null;
+            return (
+              <div key={`city-${slide.cityId}-${i}`} id={`slide-city-${slide.cityId}-${i}`} data-slide>
+                <CityIntroSlide
+                  city={city}
+                  cityId={slide.cityId}
+                  maxCityNameLength={maxCityNameLength}
+                />
+              </div>
+            );
+          }
+
+          const day = trip.days[slide.dayIndex];
+          const city = trip.cities[day.cityId];
+          if (!city) return null;
+          return (
+            <div key={`day-${day.dayNumber}-${slide.dayIndex}`} id={`slide-day-${slide.dayIndex}`} data-slide>
+              <DaySlide
+                day={day}
+                city={city}
+                dayIndex={slide.dayIndex}
+                totalDays={trip.days.length}
+                onUpdateEvent={noop2}
+                onAddEvent={noop}
+                onRemoveEvent={noop2}
+                onReorderEvents={noop3}
+                onUpdateGallerySlot={noop2}
+                onAddGallerySlot={noop}
+                onRemoveGallerySlot={noop2}
+                onUpdateDayField={noop}
+                onRemoveDay={noop}
+                locked={true}
+              />
+            </div>
+          );
+        })}
       </div>
-    </div>
+    </main>
   );
 }

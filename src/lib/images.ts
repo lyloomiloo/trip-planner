@@ -14,12 +14,12 @@ export interface SearchResult {
  * Auto-detect which API key is configured and use that provider.
  * Priority: Unsplash (better travel/location photos) → Pexels (higher free rate limit)
  */
-export async function searchImages(query: string, count: number = 12): Promise<SearchResult[]> {
+export async function searchImages(query: string, count: number = 12, page: number = 1): Promise<SearchResult[]> {
   const unsplashKey = process.env.NEXT_PUBLIC_UNSPLASH_ACCESS_KEY;
   const pexelsKey = process.env.NEXT_PUBLIC_PEXELS_API_KEY;
 
-  if (unsplashKey) return searchUnsplash(query, count, unsplashKey);
-  if (pexelsKey) return searchPexels(query, count, pexelsKey);
+  if (unsplashKey) return searchUnsplash(query, count, unsplashKey, page);
+  if (pexelsKey) return searchPexels(query, count, pexelsKey, page);
 
   return [];
 }
@@ -35,11 +35,11 @@ export function getConfiguredProvider(): string | null {
 // Requires photographer attribution when displaying images
 
 async function searchUnsplash(
-  query: string, count: number, key: string
+  query: string, count: number, key: string, page: number = 1
 ): Promise<SearchResult[]> {
   try {
     const res = await fetch(
-      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=${count}&orientation=landscape`,
+      `https://api.unsplash.com/search/photos?query=${encodeURIComponent(query)}&per_page=${count}&page=${page}&orientation=landscape`,
       { headers: { Authorization: `Client-ID ${key}` } }
     );
     if (!res.ok) return [];
@@ -60,11 +60,11 @@ async function searchUnsplash(
 // Sign up: https://www.pexels.com/api/ → copy API Key
 
 async function searchPexels(
-  query: string, count: number, key: string
+  query: string, count: number, key: string, page: number = 1
 ): Promise<SearchResult[]> {
   try {
     const res = await fetch(
-      `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${count}&orientation=landscape`,
+      `https://api.pexels.com/v1/search?query=${encodeURIComponent(query)}&per_page=${count}&page=${page}&orientation=landscape`,
       { headers: { Authorization: key } }
     );
     if (!res.ok) return [];

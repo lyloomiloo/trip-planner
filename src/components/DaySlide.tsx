@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import type { DayData, CityData, ScheduleEvent, GallerySlot as GallerySlotType } from "@/types/itinerary";
 import WeatherWidget from "./WeatherWidget";
 import ImageGallery from "./ImageGallery";
@@ -20,7 +20,10 @@ interface DaySlideProps {
   onAddGallerySlot: (dayIndex: number, slot: GallerySlotType) => void;
   onRemoveGallerySlot: (dayIndex: number, slotIndex: number) => void;
   onUpdateDayField: (dayIndex: number, field: keyof DayData, value: string) => void;
+  onUpdateDayDate?: (dayIndex: number, date: string) => void;
+  onUpdateDayWeatherLoc?: (dayIndex: number, lat: number, lng: number) => void;
   onRemoveDay: (dayIndex: number) => void;
+  locked?: boolean;
 }
 
 export default function DaySlide({
@@ -36,34 +39,92 @@ export default function DaySlide({
   onAddGallerySlot,
   onRemoveGallerySlot,
   onUpdateDayField,
+  onUpdateDayDate,
+  onUpdateDayWeatherLoc,
   onRemoveDay,
+  locked,
 }: DaySlideProps) {
   const [confirmingRemove, setConfirmingRemove] = useState(false);
-  const dateObj = new Date(day.date + "T00:00:00");
+  const [editingDate, setEditingDate] = useState(false);
+  const [dateInputVal, setDateInputVal] = useState(day.date);
+
+  // Keep local date input in sync with prop changes
+  useEffect(() => {
+    setDateInputVal(day.date);
+  }, [day.date]);
+
+  const dateObj = new Date(day.date + "T12:00:00");
   const dateNum = dateObj.getDate();
   const monthStr = dateObj.toLocaleString("en-GB", { month: "short" }).toUpperCase();
+
+  // Use per-day weather override if set, otherwise fall back to city coords
+  const weatherLat = day.weatherLat ?? city.lat;
+  const weatherLng = day.weatherLng ?? city.lng;
 
   return (
     <section className={`group/day relative w-full px-12 py-10 border-b border-neutral-200 overflow-hidden ${dayIndex < totalDays - 1 ? "snap-start" : ""}`} style={{ height: "var(--slide-h)" }}>
       {/* Top row: Weather (left) + Day header (right) */}
       <div className="flex justify-between items-start mb-8">
         {/* Weather widget — top left */}
-        <WeatherWidget lat={city.lat} lng={city.lng} date={day.date} />
+        <WeatherWidget
+          lat={weatherLat}
+          lng={weatherLng}
+          date={day.date}
+          cityName={city.name}
+          onUpdateLocation={onUpdateDayWeatherLoc ? (lat, lng) => onUpdateDayWeatherLoc(dayIndex, lat, lng) : undefined}
+          locked={locked}
+        />
 
         {/* Day header — top right */}
         <div className="text-right">
           <h2 className="text-7xl font-black uppercase tracking-tighter leading-none">
             DAY {day.dayNumber}
           </h2>
-          <p className="retro-label inline-block mt-2">
-            {dateNum} {monthStr}, {day.weekday.toUpperCase()}
-          </p>
+          {/* Date display / editable */}
+          {!editingDate || locked ? (
+            <p
+              className={`retro-label inline-block mt-2 ${!locked ? "cursor-pointer hover:bg-neutral-200" : ""} transition-colors`}
+              onClick={() => !locked && onUpdateDayDate && setEditingDate(true)}
+              title={!locked ? "Click to change date" : undefined}
+            >
+              {dateNum} {monthStr}, {day.weekday.toUpperCase()}
+            </p>
+          ) : (
+            <div className="inline-flex items-center gap-2 mt-2">
+              <input
+                type="date"
+                value={dateInputVal}
+                autoFocus
+                onChange={(e) => {
+                  const val = e.target.value;
+                  if (val && /^\d{4}-\d{2}-\d{2}$/.test(val)) {
+                    setDateInputVal(val);
+                    if (onUpdateDayDate) {
+                      onUpdateDayDate(dayIndex, val);
+                    }
+                  }
+                }}
+                onBlur={() => setTimeout(() => setEditingDate(false), 300)}
+                className="text-xs border border-black px-2 py-1 focus:outline-none"
+              />
+              <button
+                onClick={() => setEditingDate(false)}
+                className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-black"
+              >
+                Done
+              </button>
+            </div>
+          )}
           <div className="mt-2">
-            <EditableText
-              value={day.route}
-              onChange={(v) => onUpdateDayField(dayIndex, "route", v)}
-              className="font-bold text-base uppercase tracking-wide text-accent-blue"
-            />
+            {locked ? (
+              <span className="font-bold text-base uppercase tracking-wide text-accent-blue">{day.route}</span>
+            ) : (
+              <EditableText
+                value={day.route}
+                onChange={(v) => onUpdateDayField(dayIndex, "route", v)}
+                className="font-bold text-base uppercase tracking-wide text-accent-blue"
+              />
+            )}
           </div>
         </div>
       </div>
@@ -84,6 +145,17 @@ export default function DaySlide({
               })
             }
             onRemoveSlot={(i) => onRemoveGallerySlot(dayIndex, i)}
+            autoSearchTerms={[
+              city.name,
+              ...day.events
+                .filter((e) => e.type !== "split" && e.title && e.highlight)
+                .map((e) => `${e.title} ${city.name}`),
+              ...day.events
+                .filter((e) => e.type !== "split" && e.title && !e.highlight)
+                .slice(0, 3)
+                .map((e) => `${e.title} ${city.name}`),
+            ]}
+            locked={locked}
           />
         </div>
 
@@ -92,58 +164,80 @@ export default function DaySlide({
           <Schedule
             events={day.events}
             onUpdateEvent={(i, ev) => onUpdateEvent(dayIndex, i, ev)}
-            onAddEvent={() =>
+            onAddEvent={(group) =>
               onAddEvent(dayIndex, {
                 time: "",
                 title: "New event",
                 type: "activity",
+                ...(group ? { group } : {}),
               })
             }
             onRemoveEvent={(i) => onRemoveEvent(dayIndex, i)}
             onReorderEvents={(from, to) => onReorderEvents(dayIndex, from, to)}
+            onAddSplitEvent={() =>
+              onAddEvent(dayIndex, {
+                time: "",
+                title: "",
+                type: "split",
+              })
+            }
+            onAddMergeEvent={() =>
+              onAddEvent(dayIndex, {
+                time: "",
+                title: "",
+                type: "split",
+              })
+            }
+            locked={locked}
           />
         </div>
       </div>
 
       {/* Accommodation footer */}
-      <div className="mt-8 text-xs uppercase tracking-widest text-neutral-400">
-        <EditableText
-          value={day.accommodation}
-          onChange={(v) => onUpdateDayField(dayIndex, "accommodation", v)}
-        />
+      <div className="mt-8 text-sm uppercase tracking-widest text-neutral-400">
+        {locked ? (
+          <span>{day.accommodation}</span>
+        ) : (
+          <EditableText
+            value={day.accommodation}
+            onChange={(v) => onUpdateDayField(dayIndex, "accommodation", v)}
+          />
+        )}
         <span className="mx-2">/</span>
         {city.name}, {city.country}
       </div>
 
-      {/* Bottom-right hover controls */}
-      <div className="absolute bottom-6 right-6 z-20 flex gap-2 opacity-0 group-hover/day:opacity-100 transition-opacity">
-        {!confirmingRemove ? (
-          <button
-            onClick={() => setConfirmingRemove(true)}
-            className="bg-black text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 hover:bg-red-700"
-          >
-            Remove
-          </button>
-        ) : (
-          <div className="flex items-center gap-3 bg-white border-2 border-black px-4 py-2">
-            <span className="text-[10px] font-bold uppercase tracking-widest">
-              Remove Day {day.dayNumber}?
-            </span>
+      {/* Bottom-right hover controls — hidden when locked */}
+      {!locked && (
+        <div className="absolute bottom-6 right-6 z-20 flex gap-2 opacity-0 group-hover/day:opacity-100 transition-opacity">
+          {!confirmingRemove ? (
             <button
-              onClick={() => { onRemoveDay(dayIndex); setConfirmingRemove(false); }}
-              className="bg-black text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 hover:bg-red-700"
+              onClick={() => setConfirmingRemove(true)}
+              className="bg-black text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 hover:bg-red-700"
             >
-              Yes
+              Remove
             </button>
-            <button
-              onClick={() => setConfirmingRemove(false)}
-              className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-black"
-            >
-              Cancel
-            </button>
-          </div>
-        )}
-      </div>
+          ) : (
+            <div className="flex items-center gap-3 bg-white border-2 border-black px-4 py-2">
+              <span className="text-[10px] font-bold uppercase tracking-widest">
+                Remove Day {day.dayNumber}?
+              </span>
+              <button
+                onClick={() => { onRemoveDay(dayIndex); setConfirmingRemove(false); }}
+                className="bg-black text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 hover:bg-red-700"
+              >
+                Yes
+              </button>
+              <button
+                onClick={() => setConfirmingRemove(false)}
+                className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-black"
+              >
+                Cancel
+              </button>
+            </div>
+          )}
+        </div>
+      )}
     </section>
   );
 }

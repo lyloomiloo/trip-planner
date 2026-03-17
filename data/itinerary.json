@@ -148,19 +148,16 @@
       "route": "SINGAPORE ✈ GENEVA",
       "accommodation": "B&B HOTEL Geneva Airport",
       "events": [
-        { "time": "12:05 AM", "title": "Flight from SIN-T2", "type": "transport" },
-        { "time": "8:05AM", "title": "Land at GEN", "type": "transport" },
-        { "time": "9:00AM", "title": "Leave luggage @ B&B HOTEL Geneva", "type": "accommodation" },
-        { "time": "10:30", "title": "Brunch @ Cottage Cafe", "type": "food", "highlight": true },
-        { "time": "12:00PM", "title": "Geneva Lake", "type": "activity", "highlight": true },
-        { "time": "2:00PM", "title": "Check-in + Siesta", "type": "rest" },
-        { "time": "4:00PM", "title": "Old Town", "type": "activity" },
-        { "time": "7:00PM", "title": "Dinner", "type": "food" }
+        { "time": "12:05 AM - 08:25 AM", "title": "Flight SIN-GVA", "type": "transport" },
+        { "time": "09:30 AM", "title": "Drop Luggage at Hotel", "type": "accommodation" },
+        { "time": "11:30 AM", "title": "Long Brunch & Lake Geneva Walk", "type": "food", "highlight": true },
+        { "time": "3:00 PM", "title": "Check-in & Rest", "type": "accommodation" },
+        { "time": "6:00 PM", "title": "Old Town Stroll", "type": "activity", "highlight": true }
       ],
       "gallery": [
         { "url": null, "caption": null, "size": "large", "slot": "A" },
-        { "url": null, "caption": "BRUNCH @ COTTAGE CAFE", "size": "medium", "slot": "B" },
-        { "url": null, "caption": "SPRING BLOOMS", "size": "medium", "slot": "C" },
+        { "url": null, "caption": "LAKE GENEVA", "size": "medium", "slot": "B" },
+        { "url": null, "caption": "OLD TOWN", "size": "medium", "slot": "C" },
         { "url": null, "caption": null, "size": "small", "slot": "D" },
         { "url": null, "caption": null, "size": "large", "slot": "E" }
       ]
@@ -173,18 +170,16 @@
       "route": "GENEVA 🚌 ANNECY 🚌 GENEVA",
       "accommodation": "B&B HOTEL Geneva Airport",
       "events": [
-        { "time": "11:40AM", "title": "Geneva → Annecy (Flix Bus)", "type": "transport" },
-        { "time": "12:30PM", "title": "Arrive Annecy", "type": "transport" },
-        { "time": "1:00PM", "title": "Brunch @ Boulangerie", "type": "food", "highlight": true },
-        { "time": "2:00PM", "title": "Old Town stroll", "type": "activity", "highlight": true },
-        { "time": "3:30PM", "title": "Lake Annecy", "type": "activity", "highlight": true },
-        { "time": "7:00PM", "title": "Return to Geneva (Flix Bus)", "type": "transport" }
+        { "time": "11:40 AM - 12:30 PM", "title": "Flix Bus: Geneva → Annecy", "type": "transport" },
+        { "time": "1:00 PM", "title": "Slow Lunch in Vieille Ville", "type": "food", "highlight": true },
+        { "time": "3:00 PM", "title": "Half Day Trip: Lake Annecy & Canals", "type": "activity", "highlight": true },
+        { "time": "7:00 PM", "title": "Evening Return: Flix Bus to Geneva", "type": "transport" }
       ],
       "gallery": [
         { "url": null, "caption": null, "size": "large", "slot": "A" },
-        { "url": null, "caption": null, "size": "medium", "slot": "B" },
-        { "url": null, "caption": "OLD TOWN", "size": "medium", "slot": "C" },
-        { "url": null, "caption": "BRUNCH @", "size": "small", "slot": "D" }
+        { "url": null, "caption": "VIEILLE VILLE", "size": "medium", "slot": "B" },
+        { "url": null, "caption": "LAKE ANNECY", "size": "medium", "slot": "C" },
+        { "url": null, "caption": null, "size": "small", "slot": "D" }
       ]
     },
     {
@@ -195,10 +190,11 @@
       "route": "GENEVA → CHAMONIX",
       "accommodation": "Hôtel Le Chamonix",
       "events": [
-        { "time": "3:30PM", "title": "Cable Car to Salève", "type": "activity", "highlight": true },
-        { "time": "5:05PM", "title": "BCN → GVA", "type": "transport" },
-        { "time": "6:30PM", "title": "Geneva → Chamonix (Swiss Tour)", "type": "transport" },
-        { "time": "8:30PM", "title": "Check in & settle", "type": "accommodation" }
+        { "time": "11:00 AM", "title": "Check-out Geneva", "type": "accommodation" },
+        { "time": "12:00 PM", "title": "Cable Car to Salève", "type": "activity", "highlight": true, "group": "A" },
+        { "time": "3:30 PM - 5:05 PM", "title": "Flight BCN → GVA (Traveler 3)", "type": "transport", "group": "B" },
+        { "time": "6:30 PM - 8:10 PM", "title": "Swiss Tour: Geneva → Chamonix", "type": "transport" },
+        { "time": "8:30 PM", "title": "Late Check-in Chamonix", "type": "accommodation" }
       ],
       "gallery": [
         { "url": null, "caption": "CABLE CAR TO SALÈVE", "size": "large", "slot": "A" },
@@ -214,14 +210,14 @@
       "route": "CHAMONIX",
       "accommodation": "Hôtel Le Chamonix",
       "events": [
-        { "time": "12:00PM", "title": "Leave hotel", "type": "activity" },
-        { "time": "1:00PM", "title": "Old Town stroll + valley views", "type": "activity", "highlight": true },
-        { "time": "2:30PM", "title": "Les Houches Cable Car", "type": "activity" },
-        { "time": "4:00PM", "title": "Aiguille du Midi (if clear)", "type": "activity", "highlight": true }
+        { "time": "10:00 AM", "title": "Old Town Stroll & River Inn Views", "type": "activity", "highlight": true },
+        { "time": "1:30 PM", "title": "Leisurely Lunch", "type": "food", "highlight": true },
+        { "time": "3:00 PM", "title": "Les Houches Cable Car", "type": "activity", "highlight": true },
+        { "time": "5:30 PM", "title": "Aiguille du Midi (Weather Permitting)", "type": "activity", "highlight": true }
       ],
       "gallery": [
         { "url": null, "caption": "AIGUILLE DU MIDI", "size": "large", "slot": "A" },
-        { "url": null, "caption": null, "size": "medium", "slot": "B" },
+        { "url": null, "caption": "LES HOUCHES", "size": "medium", "slot": "B" },
         { "url": null, "caption": null, "size": "medium", "slot": "C" }
       ]
     },
@@ -233,10 +229,11 @@
       "route": "CHAMONIX",
       "accommodation": "Hôtel Le Chamonix",
       "events": [
-        { "time": "9:00AM", "title": "Brévent-Flégère", "type": "activity", "highlight": true },
-        { "time": "12:00PM", "title": "Montenvers → Mer de Glace", "type": "activity", "highlight": true },
-        { "time": "3:00PM", "title": "Ski / Snowboard", "type": "activity", "highlight": true },
-        { "time": "5:00PM", "title": "Rhône Valley walk", "type": "activity" }
+        { "time": "09:30 AM", "title": "Brévent-Flégère Panoramic Views", "type": "activity", "highlight": true },
+        { "time": "12:00 PM", "title": "Montenvers Train → Mer de Glace", "type": "activity", "highlight": true },
+        { "time": "", "title": "", "type": "split" },
+        { "time": "3:00 PM", "title": "Ski / Snowboard Session", "type": "activity", "highlight": true, "group": "A" },
+        { "time": "3:00 PM", "title": "Rhône Valley Walk & Relaxation", "type": "activity", "group": "B" }
       ],
       "gallery": [
         { "url": null, "caption": "MER DE GLACE", "size": "large", "slot": "A" },
@@ -252,10 +249,11 @@
       "route": "CHAMONIX → VALLORCINE → MARTIGNY → BRIG",
       "accommodation": "Hotel de Londres (Attic)",
       "events": [
-        { "time": "10:11AM", "title": "Chamonix → Vallorcine (TER 18809)", "type": "transport" },
-        { "time": "12:13PM", "title": "Vallorcine → Martigny", "type": "transport" },
-        { "time": "1:17PM", "title": "Martigny → Brig (R 91 6217)", "type": "transport" },
-        { "time": "3:00PM", "title": "Aletsch Glacier / Lötchberg Pass", "type": "activity", "highlight": true }
+        { "time": "09:30 AM", "title": "Early Check-out Chamonix", "type": "accommodation" },
+        { "time": "10:11 AM - 11:01 AM", "title": "Train: Chamonix → Vallorcine", "type": "transport" },
+        { "time": "12:13 PM - 1:09 PM", "title": "Train: Vallorcine → Martigny", "type": "transport" },
+        { "time": "1:17 PM - 2:25 PM", "title": "Train: Martigny → Brig", "type": "transport" },
+        { "time": "3:00 PM", "title": "Check-in & Aletsch Glacier View", "type": "activity", "highlight": true }
       ],
       "gallery": [
         { "url": null, "caption": "SCENIC TRAIN", "size": "large", "slot": "A" },
@@ -271,14 +269,14 @@
       "route": "BRIG → CHUR (GLACIER EXPRESS)",
       "accommodation": "Bogentrakt Hostel",
       "events": [
-        { "time": "10:14AM", "title": "Glacier Express (Brig → Chur)", "type": "transport", "highlight": true },
-        { "time": "2:25PM", "title": "Arrive Chur", "type": "transport" },
-        { "time": "3:00PM", "title": "Ratisches Museum / Bierhalle", "type": "activity" },
-        { "time": "5:00PM", "title": "Old Town + Stadturm (sunset)", "type": "activity", "highlight": true }
+        { "time": "09:45 AM", "title": "Check-out Brig", "type": "accommodation" },
+        { "time": "10:14 AM - 2:25 PM", "title": "Glacier Express: Brig → Chur", "type": "transport", "highlight": true },
+        { "time": "3:00 PM", "title": "Check-in & Rätisches Museum", "type": "activity" },
+        { "time": "5:30 PM", "title": "Dinner @ Charly's Bierhalle", "type": "food", "highlight": true }
       ],
       "gallery": [
         { "url": null, "caption": "GLACIER EXPRESS", "size": "large", "slot": "A" },
-        { "url": null, "caption": null, "size": "medium", "slot": "B" },
+        { "url": null, "caption": "RÄTISCHES MUSEUM", "size": "medium", "slot": "B" },
         { "url": null, "caption": null, "size": "medium", "slot": "C" }
       ]
     },
@@ -290,13 +288,14 @@
       "route": "CHUR → BUCHS → FELDKIRCH → INNSBRUCK",
       "accommodation": "Motel One Innsbruck",
       "events": [
-        { "time": "11:42AM", "title": "Chur → Buchs SG (IR 13)", "type": "transport" },
-        { "time": "12:33PM", "title": "Buchs SG → Feldkirch S2", "type": "transport" },
-        { "time": "1:17PM", "title": "Feldkirch → Innsbruck RJX", "type": "transport" },
-        { "time": "4:00PM", "title": "Explore Innsbruck", "type": "activity", "highlight": true }
+        { "time": "11:00 AM", "title": "Check-out Chur", "type": "accommodation" },
+        { "time": "11:42 AM - 12:14 PM", "title": "IR 13: Chur → Buchs SG", "type": "transport" },
+        { "time": "12:33 PM - 12:55 PM", "title": "S2: Buchs SG → Feldkirch", "type": "transport" },
+        { "time": "1:17 PM - 3:11 PM", "title": "RJX: Feldkirch → Innsbruck", "type": "transport" },
+        { "time": "4:00 PM", "title": "Check-in & Goldenes Dachl", "type": "activity", "highlight": true }
       ],
       "gallery": [
-        { "url": null, "caption": null, "size": "large", "slot": "A" },
+        { "url": null, "caption": "GOLDENES DACHL", "size": "large", "slot": "A" },
         { "url": null, "caption": null, "size": "medium", "slot": "B" },
         { "url": null, "caption": null, "size": "medium", "slot": "C" }
       ]
@@ -309,14 +308,16 @@
       "route": "INNSBRUCK",
       "accommodation": "Motel One Innsbruck",
       "events": [
-        { "time": "10:00AM", "title": "Stubai Glacier / Nordkette", "type": "activity", "highlight": true },
-        { "time": "2:00PM", "title": "Ski / Snowboard", "type": "activity", "highlight": true },
-        { "time": "5:00PM", "title": "Explore Town", "type": "activity" }
+        { "time": "10:00 AM", "title": "Stubaier Gletscher Excursion", "type": "activity", "highlight": true },
+        { "time": "2:30 PM", "title": "Late Lunch & Hofburg Gardens", "type": "food", "highlight": true },
+        { "time": "", "title": "", "type": "split" },
+        { "time": "4:30 PM", "title": "Ski / Snowboard Session", "type": "activity", "highlight": true, "group": "A" },
+        { "time": "4:30 PM", "title": "Old Town Stroll & Sunset View", "type": "activity", "group": "B" }
       ],
       "gallery": [
-        { "url": null, "caption": "NORDKETTE", "size": "large", "slot": "A" },
+        { "url": null, "caption": "STUBAIER GLETSCHER", "size": "large", "slot": "A" },
         { "url": null, "caption": "SKI / SNOWBOARD", "size": "medium", "slot": "B" },
-        { "url": null, "caption": null, "size": "medium", "slot": "C" }
+        { "url": null, "caption": "HOFBURG GARDENS", "size": "medium", "slot": "C" }
       ]
     },
     {
@@ -327,13 +328,14 @@
       "route": "INNSBRUCK → JENBACH → MAYRHOFEN",
       "accommodation": "Hotel Garni Jennewein",
       "events": [
-        { "time": "9:00AM", "title": "Breakfast @ Motel One", "type": "food" },
-        { "time": "3:20PM", "title": "Innsbruck → Jenbach (R 157)", "type": "transport" },
-        { "time": "4:11PM", "title": "Arrive Mayrhofen", "type": "transport" },
-        { "time": "5:00PM", "title": "Explore Town", "type": "activity", "highlight": true }
+        { "time": "10:00 AM", "title": "Nordkette Mountain View", "type": "activity", "highlight": true },
+        { "time": "1:30 PM", "title": "Leisurely Lunch in Innsbruck", "type": "food" },
+        { "time": "3:20 PM - 3:44 PM", "title": "REX2: Innsbruck → Jenbach", "type": "transport" },
+        { "time": "4:11 PM - 5:01 PM", "title": "R 157: Jenbach → Mayrhofen", "type": "transport" },
+        { "time": "5:30 PM", "title": "Check-in & Explore Town", "type": "activity" }
       ],
       "gallery": [
-        { "url": null, "caption": null, "size": "large", "slot": "A" },
+        { "url": null, "caption": "NORDKETTE", "size": "large", "slot": "A" },
         { "url": null, "caption": "ZILLERTAL VALLEY", "size": "medium", "slot": "B" },
         { "url": null, "caption": null, "size": "medium", "slot": "C" }
       ]
@@ -346,14 +348,13 @@
       "route": "MAYRHOFEN",
       "accommodation": "Hotel Garni Jennewein",
       "events": [
-        { "time": "10:00AM", "title": "Hintertux Glacier (Ice Palace)", "type": "activity", "highlight": true },
-        { "time": "12:15PM", "title": "Penken / Ahorn Cable Cars", "type": "activity", "highlight": true },
-        { "time": "3:00PM", "title": "Maisi Flitzer (Alpine Coaster)", "type": "activity", "highlight": true }
+        { "time": "10:00 AM", "title": "Hintertux Glacier (Ice Palace)", "type": "activity", "highlight": true },
+        { "time": "3:00 PM", "title": "Penken / Ahorn Cable Cars", "type": "activity", "highlight": true }
       ],
       "gallery": [
         { "url": null, "caption": "HINTERTUX GLACIER", "size": "large", "slot": "A" },
         { "url": null, "caption": "PENKEN", "size": "medium", "slot": "B" },
-        { "url": null, "caption": "ALPINE COASTER", "size": "medium", "slot": "C" }
+        { "url": null, "caption": "ICE PALACE", "size": "medium", "slot": "C" }
       ]
     },
     {
@@ -364,14 +365,14 @@
       "route": "MAYRHOFEN → ZELL AM SEE",
       "accommodation": "AlpenParks Hotel Central",
       "events": [
-        { "time": "11:19AM", "title": "Mayrhofen → Zell am See", "type": "transport" },
-        { "time": "12:10PM", "title": "Arrive Zell am See", "type": "transport" },
-        { "time": "1:00PM", "title": "Walk around Lake & Old Town", "type": "activity", "highlight": true },
-        { "time": "4:00PM", "title": "Schmittenhöhe Cable Car", "type": "activity", "highlight": true }
+        { "time": "11:00 AM", "title": "Check-out Mayrhofen", "type": "accommodation" },
+        { "time": "11:19 AM - 12:10 PM", "title": "Train: Mayrhofen → Zell am See", "type": "transport" },
+        { "time": "1:00 PM", "title": "Maisi Flitzer Alpine Coaster", "type": "activity", "highlight": true },
+        { "time": "3:00 PM", "title": "Check-in & Lake Zell Stroll", "type": "activity", "highlight": true }
       ],
       "gallery": [
-        { "url": null, "caption": null, "size": "large", "slot": "A" },
-        { "url": null, "caption": "SCHMITTENHÖHE", "size": "medium", "slot": "B" },
+        { "url": null, "caption": "LAKE ZELL", "size": "large", "slot": "A" },
+        { "url": null, "caption": "ALPINE COASTER", "size": "medium", "slot": "B" },
         { "url": null, "caption": null, "size": "medium", "slot": "C" }
       ]
     },
@@ -383,12 +384,14 @@
       "route": "ZELL AM SEE",
       "accommodation": "AlpenParks Hotel Central",
       "events": [
-        { "time": "10:00AM", "title": "cityXpress Cable Car", "type": "activity", "highlight": true },
-        { "time": "2:00PM", "title": "Ski / Snowboard", "type": "activity", "highlight": true }
+        { "time": "10:00 AM", "title": "Schmittenhöhe Cable Car", "type": "activity", "highlight": true },
+        { "time": "", "title": "", "type": "split" },
+        { "time": "2:00 PM", "title": "Ski / Snowboard Session", "type": "activity", "highlight": true, "group": "A" },
+        { "time": "2:00 PM", "title": "Lake Walk & Old Town Exploration", "type": "activity", "group": "B" }
       ],
       "gallery": [
-        { "url": null, "caption": "SKI / SNOWBOARD", "size": "large", "slot": "A" },
-        { "url": null, "caption": null, "size": "medium", "slot": "B" }
+        { "url": null, "caption": "SCHMITTENHÖHE", "size": "large", "slot": "A" },
+        { "url": null, "caption": "SKI / SNOWBOARD", "size": "medium", "slot": "B" }
       ]
     },
     {
@@ -399,11 +402,13 @@
       "route": "ZELL AM SEE → SALZBURG → VIENNA",
       "accommodation": "The Social Hub Vienna",
       "events": [
-        { "time": "10:15AM", "title": "Zell am See → Schwarzach", "type": "transport" },
-        { "time": "10:55AM", "title": "Schwarzach → Salzburg (ICE)", "type": "transport" },
-        { "time": "12:07PM", "title": "Salzburg → Wien Hbf", "type": "transport" },
-        { "time": "3:00PM", "title": "Ringstrasse / Hofburg", "type": "activity", "highlight": true },
-        { "time": "5:00PM", "title": "St. Stephen's Cathedral (sunset)", "type": "activity", "highlight": true }
+        { "time": "10:15 AM - 10:45 AM", "title": "IR: Zell am See → Schwarzach", "type": "transport" },
+        { "time": "10:55 AM - 11:53 AM", "title": "ICE: Schwarzach → Salzburg", "type": "transport" },
+        { "time": "12:07 PM - 2:32 PM", "title": "RJX: Salzburg → Wien Hbf", "type": "transport" },
+        { "time": "", "title": "", "type": "split" },
+        { "time": "3:00 PM", "title": "Check-in & Ringstrasse Walk", "type": "activity", "highlight": true, "group": "A" },
+        { "time": "2:42 PM - 2:57 PM", "title": "RJ: Wien Hbf → Wien Flughafen", "type": "transport", "group": "B" },
+        { "time": "5:30 PM - 7:50 PM", "title": "Flight: VIE → BCN", "type": "transport", "group": "B" }
       ],
       "gallery": [
         { "url": null, "caption": "RINGSTRASSE", "size": "large", "slot": "A" },
@@ -419,12 +424,13 @@
       "route": "VIENNA ✈ SINGAPORE",
       "accommodation": "The Social Hub Vienna",
       "events": [
-        { "time": "10:00AM", "title": "Cafe Central", "type": "food", "highlight": true },
-        { "time": "3:30PM", "title": "VIE → SIN flight", "type": "transport" }
+        { "time": "10:00 AM", "title": "Café Central Breakfast", "type": "food", "highlight": true },
+        { "time": "12:30 PM", "title": "Kunsthistorisches Museum", "type": "activity", "highlight": true },
+        { "time": "6:30 PM", "title": "Flight: VIE → SIN", "type": "transport" }
       ],
       "gallery": [
-        { "url": null, "caption": "CAFE CENTRAL", "size": "large", "slot": "A" },
-        { "url": null, "caption": null, "size": "medium", "slot": "B" }
+        { "url": null, "caption": "CAFÉ CENTRAL", "size": "large", "slot": "A" },
+        { "url": null, "caption": "KUNSTHISTORISCHES", "size": "medium", "slot": "B" }
       ]
     }
   ]

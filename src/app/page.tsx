@@ -23,6 +23,7 @@ export default function Home() {
   const [showOverview, setShowOverview] = useState(false);
   const [activeTripId, setActiveTripId] = useState<string>(DEFAULT_TRIP_ID);
   const [initialData, setInitialData] = useState<ItineraryData | undefined>(undefined);
+  const [locked, setLocked] = useState(false);
 
   const {
     state,
@@ -38,6 +39,8 @@ export default function Home() {
     updateCity,
     removeCity,
     updateDayField,
+    updateDayDate,
+    updateDayWeatherLoc,
     addDay,
     removeDay,
     moveDay,
@@ -243,13 +246,13 @@ export default function Home() {
     const nextNum = lastDay ? lastDay.dayNumber + 1 : 1;
     const nextDate = lastDay
       ? (() => {
-          const d = new Date(lastDay.date + "T00:00:00");
+          const d = new Date(lastDay.date + "T12:00:00");
           d.setDate(d.getDate() + 1);
-          return d.toISOString().split("T")[0];
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
         })()
       : "2026-03-26";
     const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    const nextWeekday = weekdays[new Date(nextDate + "T00:00:00").getDay()];
+    const nextWeekday = weekdays[new Date(nextDate + "T12:00:00").getDay()];
 
     addDay({
       dayNumber: nextNum,
@@ -341,13 +344,13 @@ export default function Home() {
     const nextNum = lastDay ? lastDay.dayNumber + 1 : 1;
     const nextDate = lastDay
       ? (() => {
-          const d = new Date(lastDay.date + "T00:00:00");
+          const d = new Date(lastDay.date + "T12:00:00");
           d.setDate(d.getDate() + 1);
-          return d.toISOString().split("T")[0];
+          return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
         })()
       : "2026-03-26";
     const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
-    const nextWeekday = weekdays[new Date(nextDate + "T00:00:00").getDay()];
+    const nextWeekday = weekdays[new Date(nextDate + "T12:00:00").getDay()];
 
     addDay({
       dayNumber: nextNum,
@@ -411,15 +414,20 @@ export default function Home() {
         onAddCity={handleAddCityDestination}
         onReset={reset}
         onBack={() => setView("landing")}
+        locked={locked}
+        onToggleLock={() => setLocked((l) => !l)}
       />
+
+      {/* All slides — locked class disables editing */}
+      <div className={locked ? "locked-itinerary" : ""}>
 
       {/* Cover Slide */}
       <div id="slide-cover" data-slide>
         <CoverSlide
           data={state}
-          onEditTitle={updateTitle}
-          onAddCity={addCity}
-          onRemoveCity={removeCity}
+          onEditTitle={locked ? undefined : updateTitle}
+          onAddCity={locked ? undefined : addCity}
+          onRemoveCity={locked ? undefined : removeCity}
         />
       </div>
 
@@ -466,21 +474,28 @@ export default function Home() {
               onAddGallerySlot={addGallerySlot}
               onRemoveGallerySlot={removeGallerySlot}
               onUpdateDayField={updateDayField}
+              onUpdateDayDate={updateDayDate}
+              onUpdateDayWeatherLoc={updateDayWeatherLoc}
               onRemoveDay={removeDay}
+              locked={locked}
             />
           </div>
         );
       })}
 
       {/* ADD — compact button below last day */}
-      <div className="flex items-center justify-center gap-4 py-16">
-        <button
-          onClick={handleAddDay}
-          className="bg-white text-black text-sm font-bold uppercase tracking-widest px-10 py-3.5 border-2 border-black hover:bg-neutral-100"
-        >
-          + Add Day
-        </button>
-      </div>
+      {!locked && (
+        <div className="flex items-center justify-center gap-4 py-16">
+          <button
+            onClick={handleAddDay}
+            className="bg-white text-black text-sm font-bold uppercase tracking-widest px-10 py-3.5 border-2 border-black hover:bg-neutral-100"
+          >
+            + Add Day
+          </button>
+        </div>
+      )}
+
+      </div>{/* end locked-itinerary wrapper */}
 
       {/* Toast notification */}
       <Toast

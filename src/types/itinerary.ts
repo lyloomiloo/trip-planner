@@ -12,8 +12,9 @@ export interface GallerySlot {
 export interface ScheduleEvent {
   time: string;
   title: string;
-  type: "transport" | "food" | "activity" | "accommodation" | "rest";
+  type: "transport" | "food" | "activity" | "accommodation" | "rest" | "split";
   highlight?: boolean;
+  group?: "A" | "B";  // for split-group events
 }
 
 export interface DayData {
@@ -25,6 +26,8 @@ export interface DayData {
   accommodation: string;
   events: ScheduleEvent[];
   gallery: GallerySlot[];
+  weatherLat?: number;  // override city lat for weather
+  weatherLng?: number;  // override city lng for weather
 }
 
 export interface CityData {

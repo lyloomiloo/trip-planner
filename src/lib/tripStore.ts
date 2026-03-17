@@ -104,8 +104,8 @@ export function createBlankItinerary(opts: {
   const titleWords = opts.title.toUpperCase().split(/\s+/);
 
   // Calculate number of days
-  const start = new Date(opts.startDate + "T00:00:00");
-  const end = opts.endDate ? new Date(opts.endDate + "T00:00:00") : start;
+  const start = new Date(opts.startDate + "T12:00:00");
+  const end = opts.endDate ? new Date(opts.endDate + "T12:00:00") : start;
   const diffDays = Math.max(1, Math.round((end.getTime() - start.getTime()) / 86400000) + 1);
 
   const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
@@ -114,7 +114,7 @@ export function createBlankItinerary(opts: {
   const days = Array.from({ length: diffDays }, (_, i) => {
     const d = new Date(start);
     d.setDate(d.getDate() + i);
-    const dateStr = d.toISOString().split("T")[0];
+    const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
     return {
       dayNumber: i + 1,
       date: dateStr,
