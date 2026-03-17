@@ -1,6 +1,6 @@
 "use client";
 
-import { useReducer, useCallback, useEffect, useRef } from "react";
+import { useReducer, useCallback, useEffect, useRef, useState } from "react";
 import type {
   ItineraryData,
   DayData,
@@ -8,7 +8,8 @@ import type {
   ScheduleEvent,
   GallerySlot,
 } from "@/types/itinerary";
-import { saveTrip, loadTrip } from "@/lib/tripStore";
+import { saveTrip, loadTrip, getTripPassphrase, deriveMeta } from "@/lib/tripStore";
+import { isSupabaseEnabled, syncTripToRemote } from "@/lib/supabaseSync";
 import rawData from "@/../data/itinerary.json";
 
 // ─── Action types ────────────────────────────────────────
@@ -215,21 +216,45 @@ const defaultData = rawData as unknown as ItineraryData;
 
 // ─── Hook ────────────────────────────────────────────────
 
+export type SyncStatus = "idle" | "syncing" | "synced" | "error" | "offline";
+
 export function useItinerary(tripId?: string, initialData?: ItineraryData) {
   // Priority: explicit initialData > localStorage > bundled JSON
   const startData = initialData ?? (tripId ? loadTrip(tripId) : null) ?? defaultData;
   const [state, dispatch] = useReducer(itineraryReducer, startData);
+  const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
 
-  // Auto-save to localStorage on every state change
+  // Auto-save to localStorage + debounced Supabase sync
   const isFirstRender = useRef(true);
+  const syncTimeoutRef = useRef<ReturnType<typeof setTimeout>>();
+
   useEffect(() => {
     if (isFirstRender.current) {
       isFirstRender.current = false;
       return;
     }
     if (tripId) {
+      // Instant localStorage save
       saveTrip(tripId, state);
+
+      // Debounced Supabase sync (2s delay)
+      if (isSupabaseEnabled()) {
+        const passphrase = getTripPassphrase(tripId);
+        if (passphrase) {
+          clearTimeout(syncTimeoutRef.current);
+          setSyncStatus("syncing");
+          syncTimeoutRef.current = setTimeout(async () => {
+            const meta = deriveMeta(tripId, state);
+            const ok = await syncTripToRemote(tripId, passphrase, meta, state);
+            setSyncStatus(ok ? "synced" : "error");
+          }, 2000);
+        } else {
+          setSyncStatus("offline");
+        }
+      }
     }
+
+    return () => clearTimeout(syncTimeoutRef.current);
   }, [state, tripId]);
 
   const updateEvent = useCallback(
@@ -363,6 +388,7 @@ export function useItinerary(tripId?: string, initialData?: ItineraryData) {
 
   return {
     state,
+    syncStatus,
     dispatch,
     updateEvent,
     addEvent,

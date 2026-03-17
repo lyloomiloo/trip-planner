@@ -2,7 +2,8 @@
 
 import { useMemo, useState, useCallback, useEffect, useRef } from "react";
 import { useItinerary } from "@/hooks/useItinerary";
-import { loadTrip, saveTrip, generateTripId, createBlankItinerary } from "@/lib/tripStore";
+import { loadTrip, saveTrip, generateTripId, createBlankItinerary, saveTripPassphrase, getTripPassphrase, deriveMeta } from "@/lib/tripStore";
+import { isSupabaseEnabled, createTripRemote } from "@/lib/supabaseSync";
 import { generateCityDetails, queuePendingCity, removePendingCity, getPendingCities } from "@/lib/gemini";
 import LandingPage from "@/components/LandingPage";
 import NewTripForm from "@/components/NewTripForm";
@@ -14,6 +15,7 @@ import Toolbar from "@/components/Toolbar";
 import SlideIndex from "@/components/SlideIndex";
 import Overview from "@/components/Overview";
 import Toast from "@/components/Toast";
+import PassphraseModal from "@/components/PassphraseModal";
 import type { ItineraryData } from "@/types/itinerary";
 
 // Default trip ID for the bundled europe-alps itinerary
@@ -28,6 +30,7 @@ export default function Home() {
 
   const {
     state,
+    syncStatus,
     updateEvent,
     addEvent,
     removeEvent,
@@ -49,6 +52,21 @@ export default function Home() {
     importJSON,
     reset,
   } = useItinerary(activeTripId, initialData);
+
+  // Passphrase modal state
+  const [showPassphraseModal, setShowPassphraseModal] = useState(false);
+  const [hasPassphrase, setHasPassphrase] = useState(false);
+  const [supabaseEnabled, setSupabaseEnabled] = useState(false);
+
+  useEffect(() => {
+    setSupabaseEnabled(isSupabaseEnabled());
+  }, []);
+
+  useEffect(() => {
+    setHasPassphrase(!!getTripPassphrase(activeTripId));
+  }, [activeTripId, showPassphraseModal]);
+
+  // handlePublish defined after showToast below
 
   // Handle deep-link from share page: ?trip=xxx&view=itinerary|overview
   useEffect(() => {
@@ -227,6 +245,19 @@ export default function Home() {
     });
   }, [activeTripId, showToast]);
 
+  /** Publish trip to cloud — set passphrase and upload to Supabase */
+  const handlePublish = useCallback(async (passphrase: string) => {
+    saveTripPassphrase(activeTripId, passphrase);
+    const meta = deriveMeta(activeTripId, state);
+    const ok = await createTripRemote(activeTripId, passphrase, meta, state);
+    if (ok) {
+      showToast("Trip published to cloud — share the link with others");
+    } else {
+      showToast("Failed to publish — it may already exist in the cloud");
+    }
+    setShowPassphraseModal(false);
+  }, [activeTripId, state, showToast]);
+
   // State for generating cities
   const [generatingCityId, setGeneratingCityId] = useState<string | null>(null);
 
@@ -309,7 +340,9 @@ export default function Home() {
       removePendingCity(id);
     } else if (result.status === "rate-limited") {
       queuePendingCity(id, name);
-      showToast("The LLM is generating your summary — check back shortly");
+      showToast("Rate limited — city summary will generate when the limit resets");
+    } else {
+      showToast("Could not generate city details — check your Gemini API key");
     }
     setGeneratingCityId(null);
   }, [addCity, addDay, updateCity, showToast, state.days]);
@@ -435,7 +468,19 @@ export default function Home() {
         onBack={() => setView("landing")}
         locked={locked}
         onToggleLock={() => setLocked((l) => !l)}
+        syncStatus={syncStatus}
+        onPublish={supabaseEnabled && !hasPassphrase ? () => setShowPassphraseModal(true) : undefined}
       />
+
+      {/* Passphrase modal */}
+      {showPassphraseModal && (
+        <PassphraseModal
+          tripId={activeTripId}
+          mode="create"
+          onSuccess={handlePublish}
+          onCancel={() => setShowPassphraseModal(false)}
+        />
+      )}
 
       {/* All slides — locked class disables editing */}
       <div className={locked ? "locked-itinerary" : ""}>

@@ -2,7 +2,8 @@
 
 import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
-import { loadTrip } from "@/lib/tripStore";
+import { loadTrip, saveTrip } from "@/lib/tripStore";
+import { isSupabaseEnabled, loadTripFromRemote } from "@/lib/supabaseSync";
 import type { ItineraryData } from "@/types/itinerary";
 import CoverSlide from "@/components/CoverSlide";
 import CityIntroSlide from "@/components/CityIntroSlide";
@@ -16,14 +17,35 @@ export default function SharePage() {
   const tripId = params.id as string;
   const [trip, setTrip] = useState<ItineraryData | null>(null);
   const [notFound, setNotFound] = useState(false);
+  const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    const data = loadTrip(tripId);
-    if (data) {
-      setTrip(data);
-    } else {
+    async function load() {
+      // Try localStorage first
+      const local = loadTrip(tripId);
+      if (local) {
+        setTrip(local);
+        setLoading(false);
+        return;
+      }
+
+      // Try Supabase if enabled
+      if (isSupabaseEnabled()) {
+        const remote = await loadTripFromRemote(tripId);
+        if (remote?.data) {
+          const data = remote.data as ItineraryData;
+          setTrip(data);
+          // Cache locally for faster subsequent loads
+          saveTrip(tripId, data);
+          setLoading(false);
+          return;
+        }
+      }
+
       setNotFound(true);
+      setLoading(false);
     }
+    load();
   }, [tripId]);
 
   // Build flat slide list (same logic as main page)
@@ -96,7 +118,7 @@ export default function SharePage() {
     );
   }
 
-  if (!trip) {
+  if (loading || !trip) {
     return (
       <div className="min-h-screen bg-white flex items-center justify-center">
         <p className="text-sm text-neutral-400 uppercase tracking-widest animate-pulse">

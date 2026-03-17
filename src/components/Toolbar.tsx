@@ -2,6 +2,8 @@
 
 import { useState } from "react";
 
+type SyncStatus = "idle" | "syncing" | "synced" | "error" | "offline";
+
 interface ToolbarProps {
   onShare: () => void;
   onOverview: () => void;
@@ -11,6 +13,8 @@ interface ToolbarProps {
   onBack: () => void;
   locked: boolean;
   onToggleLock: () => void;
+  syncStatus?: SyncStatus;
+  onPublish?: () => void; // publish to cloud (set passphrase)
 }
 
 export default function Toolbar({
@@ -22,6 +26,8 @@ export default function Toolbar({
   onBack,
   locked,
   onToggleLock,
+  syncStatus,
+  onPublish,
 }: ToolbarProps) {
   const [showCityInput, setShowCityInput] = useState(false);
   const [cityInput, setCityInput] = useState("");
@@ -109,6 +115,34 @@ export default function Toolbar({
         <button onClick={onShare} className={btnClass}>
           Share
         </button>
+
+        {/* Publish to cloud — only if Supabase enabled and no passphrase set yet */}
+        {onPublish && (
+          <>
+            <span className="text-neutral-200">|</span>
+            <button onClick={onPublish} className={btnClass}>
+              Publish
+            </button>
+          </>
+        )}
+
+        {/* Sync status indicator */}
+        {syncStatus && syncStatus !== "idle" && syncStatus !== "offline" && (
+          <>
+            <span
+              className={`w-2 h-2 rounded-full shrink-0 ${
+                syncStatus === "synced" ? "bg-green-400" :
+                syncStatus === "syncing" ? "bg-amber-400 animate-pulse" :
+                "bg-red-400"
+              }`}
+              title={
+                syncStatus === "synced" ? "Synced to cloud" :
+                syncStatus === "syncing" ? "Syncing..." :
+                "Sync error"
+              }
+            />
+          </>
+        )}
 
         <span className="text-neutral-200">|</span>
 

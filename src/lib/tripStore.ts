@@ -84,6 +84,72 @@ export function deleteTrip(id: string) {
   writeStore(store);
 }
 
+// ─── Passphrase access storage ────────────────────────────
+// Stores which trips the user has edit access to (passphrase remembered locally)
+const ACCESS_KEY = "trip-planner-access";
+
+interface AccessEntry {
+  id: string;
+  passphrase: string;
+  lastAccessed: number;
+}
+
+function readAccess(): AccessEntry[] {
+  if (typeof window === "undefined") return [];
+  try {
+    return JSON.parse(localStorage.getItem(ACCESS_KEY) || "[]");
+  } catch {
+    return [];
+  }
+}
+
+function writeAccess(entries: AccessEntry[]) {
+  localStorage.setItem(ACCESS_KEY, JSON.stringify(entries));
+}
+
+/** Store a passphrase for a trip (so user doesn't have to re-enter) */
+export function saveTripPassphrase(id: string, passphrase: string) {
+  const entries = readAccess().filter((e) => e.id !== id);
+  entries.push({ id, passphrase, lastAccessed: Date.now() });
+  writeAccess(entries);
+}
+
+/** Get the stored passphrase for a trip (or null if not stored) */
+export function getTripPassphrase(id: string): string | null {
+  const entry = readAccess().find((e) => e.id === id);
+  return entry?.passphrase ?? null;
+}
+
+/** Remove stored passphrase for a trip */
+export function removeTripPassphrase(id: string) {
+  writeAccess(readAccess().filter((e) => e.id !== id));
+}
+
+/** List all trip IDs that have stored passphrases */
+export function listAccessEntries(): AccessEntry[] {
+  return readAccess().sort((a, b) => b.lastAccessed - a.lastAccessed);
+}
+
+/** Derive TripMeta from ItineraryData (useful for Supabase sync) */
+export function deriveMeta(id: string, data: ItineraryData): TripMeta {
+  const days = data.days;
+  const firstDay = days[0];
+  const lastDay = days[days.length - 1];
+  const firstCityId = firstDay?.cityId;
+  const lastCityId = lastDay?.cityId;
+
+  return {
+    id,
+    title: data.tripTitle.filter(Boolean).join(" "),
+    startCity: firstCityId ? (data.cities[firstCityId]?.name ?? firstCityId) : "",
+    endCity: lastCityId ? (data.cities[lastCityId]?.name ?? lastCityId) : "",
+    totalDays: days.length,
+    startDate: firstDay?.date ?? "",
+    endDate: lastDay?.date ?? "",
+    updatedAt: Date.now(),
+  };
+}
+
 /** Generate a slug ID from a title */
 export function generateTripId(title: string): string {
   const slug = title
