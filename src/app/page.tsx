@@ -175,6 +175,11 @@ export default function Home() {
     loadData(data);
     setView("trip");
 
+    // Prompt for passphrase if Supabase is enabled
+    if (isSupabaseEnabled()) {
+      setTimeout(() => setShowPassphraseModal(true), 500);
+    }
+
     // Geocode + Gemini each destination city in background
     for (const dest of formData.destinations) {
       const cityId = dest.city.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");

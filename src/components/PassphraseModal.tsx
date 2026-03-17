@@ -80,13 +80,22 @@ export default function PassphraseModal({
       >
         {/* Title */}
         <h2 className="text-lg font-bold uppercase tracking-widest text-black mb-1">
-          {isCreate ? "Set a Passphrase" : "Enter Passphrase"}
+          {isCreate ? "Publish Your Trip" : "Enter Passphrase"}
         </h2>
-        <p className="text-xs font-bold uppercase tracking-widest text-neutral-400 mb-6">
-          {isCreate
-            ? "This lets you edit from any device"
-            : "To edit this trip"}
-        </p>
+        {isCreate ? (
+          <div className="mb-6">
+            <p className="text-xs font-bold uppercase tracking-widest text-[#C80815] mb-2">
+              Save &amp; access your edits from any device
+            </p>
+            <p className="text-[10px] text-neutral-400 leading-relaxed">
+              Set a passphrase to publish your trip to the cloud. You&apos;ll need this passphrase to access and edit your trip again. Share the trip ID + passphrase with travel companions so they can edit too.
+            </p>
+          </div>
+        ) : (
+          <p className="text-xs font-bold uppercase tracking-widest text-neutral-400 mb-6">
+            To edit this trip
+          </p>
+        )}
 
         {/* Passphrase input */}
         <div className="mb-4">
@@ -153,15 +162,19 @@ export default function PassphraseModal({
             onClick={isCreate ? onCancel : (onViewOnly ?? onCancel)}
             className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-black transition-colors"
           >
-            {isCreate ? "Skip" : "View Only"}
+            {isCreate ? "Skip (local only)" : "View Only"}
           </button>
 
           <button
             onClick={handleSubmit}
             disabled={!canSubmit || loading}
-            className="border-2 border-black bg-black text-white px-5 py-2 text-[10px] font-bold uppercase tracking-widest hover:bg-neutral-800 disabled:bg-neutral-200 disabled:text-neutral-400 disabled:border-neutral-200 transition-colors"
+            className={`border-2 px-5 py-2 text-[10px] font-bold uppercase tracking-widest transition-colors disabled:bg-neutral-200 disabled:text-neutral-400 disabled:border-neutral-200 ${
+              isCreate
+                ? "border-[#C80815] bg-[#C80815] text-white hover:bg-[#a00610]"
+                : "border-black bg-black text-white hover:bg-neutral-800"
+            }`}
           >
-            {loading ? "..." : isCreate ? "Create" : "Enter"}
+            {loading ? "..." : isCreate ? "Publish" : "Enter"}
           </button>
         </div>
       </div>

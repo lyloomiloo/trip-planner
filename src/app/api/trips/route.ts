@@ -43,7 +43,7 @@ export async function POST(request: Request) {
 
     const passphrase_hash = hashPassphrase(passphrase);
 
-    // Check if trip already exists
+    // Check if trip already exists by ID
     const checkRes = await fetch(
       `${config.url}/rest/v1/trips?id=eq.${encodeURIComponent(id)}&select=id`,
       { headers: supabaseHeaders(config.key) }
@@ -64,6 +64,21 @@ export async function POST(request: Request) {
         { error: "A trip with this ID already exists" },
         { status: 409 }
       );
+    }
+
+    // Also check passphrase hash isn't already used
+    const hashCheck = await fetch(
+      `${config.url}/rest/v1/trips?passphrase_hash=eq.${passphrase_hash}&select=id`,
+      { headers: supabaseHeaders(config.key) }
+    );
+    if (hashCheck.ok) {
+      const hashExisting = await hashCheck.json();
+      if (hashExisting.length > 0) {
+        return NextResponse.json(
+          { error: "This passphrase is already in use — choose a different one" },
+          { status: 409 }
+        );
+      }
     }
 
     // Insert new trip
@@ -102,6 +117,7 @@ export async function POST(request: Request) {
   }
 }
 
+/** GET /api/trips?passphrase=xxx — look up trip by passphrase */
 export async function GET(request: Request) {
   const config = getSupabaseConfig();
   if (!config) {
@@ -113,45 +129,49 @@ export async function GET(request: Request) {
 
   try {
     const { searchParams } = new URL(request.url);
-    const idsParam = searchParams.get("ids");
+    const passphrase = searchParams.get("passphrase");
 
-    if (!idsParam) {
+    if (!passphrase) {
       return NextResponse.json(
-        { error: "ids query parameter is required" },
+        { error: "passphrase query parameter is required" },
         { status: 400 }
       );
     }
 
-    const ids = idsParam.split(",").map((id) => id.trim()).filter(Boolean);
-    if (ids.length === 0) {
-      return NextResponse.json(
-        { error: "At least one ID is required" },
-        { status: 400 }
-      );
-    }
+    const hash = hashPassphrase(passphrase);
 
-    // Use PostgREST "in" filter
-    const filter = `(${ids.map((id) => `"${id}"`).join(",")})`;
     const res = await fetch(
-      `${config.url}/rest/v1/trips?id=in.${filter}&select=id,meta,created_at,updated_at`,
+      `${config.url}/rest/v1/trips?passphrase_hash=eq.${hash}&select=id,meta,data`,
       { headers: supabaseHeaders(config.key) }
     );
 
     if (!res.ok) {
       const errText = await res.text();
-      console.error("[trips] Supabase list error:", res.status, errText);
+      console.error("[trips] Supabase lookup error:", res.status, errText);
       return NextResponse.json(
-        { error: "Failed to list trips", details: errText },
+        { error: "Failed to look up trip", details: errText },
         { status: res.status }
       );
     }
 
     const trips = await res.json();
-    return NextResponse.json(trips);
+    if (trips.length === 0) {
+      return NextResponse.json(
+        { error: "No trip found for this passphrase" },
+        { status: 404 }
+      );
+    }
+
+    const trip = trips[0];
+    return NextResponse.json({
+      id: trip.id,
+      meta: trip.meta,
+      data: trip.data,
+    });
   } catch (err) {
     console.error("[trips] GET error:", err);
     return NextResponse.json(
-      { error: "Failed to list trips", details: String(err) },
+      { error: "Failed to look up trip", details: String(err) },
       { status: 500 }
     );
   }

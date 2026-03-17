@@ -116,11 +116,14 @@ export default function Toolbar({
           Share
         </button>
 
-        {/* Publish to cloud — only if Supabase enabled and no passphrase set yet */}
+        {/* Publish to cloud — red and prominent when not yet published */}
         {onPublish && (
           <>
             <span className="text-neutral-200">|</span>
-            <button onClick={onPublish} className={btnClass}>
+            <button
+              onClick={onPublish}
+              className="text-[10px] font-bold uppercase tracking-widest text-white bg-[#C80815] px-3 py-1 hover:bg-[#a00610] transition-colors animate-pulse"
+            >
               Publish
             </button>
           </>

@@ -112,36 +112,25 @@ export async function verifyPassphrase(
 }
 
 /**
- * Load multiple trip metas by IDs.
- * Calls GET /api/trips?ids=id1,id2,id3
+ * Look up a trip by passphrase only (no trip ID needed).
+ * Calls GET /api/trips?passphrase=...
+ * Returns { id, meta, data } or null.
  */
-export async function loadTripMetasFromRemote(
-  ids: string[]
-): Promise<
-  Array<{
-    id: string;
-    title: string;
-    startCity: string;
-    endCity: string;
-    totalDays: number;
-    startDate: string;
-    endDate: string;
-    updatedAt: number;
-  }>
-> {
-  if (ids.length === 0) return [];
+export async function loadTripByPassphrase(
+  passphrase: string
+): Promise<{ id: string; data: object } | null> {
   try {
     const res = await fetch(
-      `/api/trips?ids=${ids.map(encodeURIComponent).join(",")}`
+      `/api/trips?passphrase=${encodeURIComponent(passphrase)}`
     );
     if (!res.ok) {
-      console.error("loadTripMetasFromRemote failed:", res.status);
-      return [];
+      console.error("loadTripByPassphrase failed:", res.status);
+      return null;
     }
     const json = await res.json();
-    return json.trips ?? json ?? [];
+    return { id: json.id, data: json.data };
   } catch (e) {
-    console.error("loadTripMetasFromRemote error:", e);
-    return [];
+    console.error("loadTripByPassphrase error:", e);
+    return null;
   }
 }

@@ -1,11 +1,9 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import { listTrips, loadTrip, saveTrip, deleteTrip, type TripMeta } from "@/lib/tripStore";
+import { saveTripPassphrase, saveTrip } from "@/lib/tripStore";
+import { isSupabaseEnabled, loadTripByPassphrase } from "@/lib/supabaseSync";
 import type { ItineraryData } from "@/types/itinerary";
-import rawData from "@/../data/itinerary.json";
-
-const DEFAULT_TRIP_ID = "europe-alps-tour";
 
 interface LandingPageProps {
   onSelectTrip: (tripId: string) => void;
@@ -13,22 +11,40 @@ interface LandingPageProps {
 }
 
 export default function LandingPage({ onSelectTrip, onStartNew }: LandingPageProps) {
-  const [showTrips, setShowTrips] = useState(false);
-  const [savedTrips, setSavedTrips] = useState<TripMeta[]>([]);
+  const [showPassphraseInput, setShowPassphraseInput] = useState(false);
+  const [passphrase, setPassphrase] = useState("");
+  const [error, setError] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [cloudEnabled, setCloudEnabled] = useState(false);
 
-  // Seed default trip + load saved trips from localStorage on mount
   useEffect(() => {
-    if (!loadTrip(DEFAULT_TRIP_ID)) {
-      saveTrip(DEFAULT_TRIP_ID, rawData as unknown as ItineraryData);
-    }
-    setSavedTrips(listTrips());
+    setCloudEnabled(isSupabaseEnabled());
   }, []);
 
-  // Format date for display: "Mar 2026"
-  const formatMonth = (dateStr: string) => {
-    if (!dateStr) return "";
-    const d = new Date(dateStr + "T12:00:00");
-    return d.toLocaleDateString("en-US", { month: "short", year: "numeric" }).toUpperCase();
+  const handleContinue = async () => {
+    if (!passphrase.trim()) {
+      setError("Enter your passphrase");
+      return;
+    }
+
+    setLoading(true);
+    setError("");
+
+    const result = await loadTripByPassphrase(passphrase.trim());
+
+    if (!result) {
+      setError("No trip found for this passphrase");
+      setLoading(false);
+      return;
+    }
+
+    // Save trip locally + store passphrase for future syncing
+    const data = result.data as ItineraryData;
+    saveTrip(result.id, data);
+    saveTripPassphrase(result.id, passphrase.trim());
+
+    setLoading(false);
+    onSelectTrip(result.id);
   };
 
   // Google Maps terrain, zoomed out
@@ -36,7 +52,7 @@ export default function LandingPage({ onSelectTrip, onStartNew }: LandingPagePro
 
   return (
     <div className="relative h-screen w-full overflow-hidden bg-neutral-200">
-      {/* Grayscale terrain map — no pins */}
+      {/* Grayscale terrain map */}
       <iframe
         src={mapSrc}
         className="absolute inset-0 w-full h-full border-0 pointer-events-none"
@@ -45,83 +61,83 @@ export default function LandingPage({ onSelectTrip, onStartNew }: LandingPagePro
         tabIndex={-1}
       />
 
-      {/* White overlay for readability */}
+      {/* White overlay */}
       <div className="absolute inset-0 bg-white/30" />
 
-      {/* Content — centered */}
+      {/* Content */}
       <div className="absolute z-20 inset-0 flex flex-col items-center justify-center">
         {/* Title */}
         <h1 className="text-[12vw] font-black uppercase tracking-tighter leading-none text-center text-black select-none">
           PLAN A TRIP
         </h1>
 
-        {/* Divider */}
-        <div className="w-12 h-0.5 bg-black/20 mt-6 mb-6" />
+        <div className="w-12 h-0.5 bg-black/20 mt-6 mb-8" />
 
-        {/* Actions */}
-        <div className="flex flex-col items-center">
-          <div className="flex gap-5">
-            {/* Start New */}
-            <div className="flex flex-col items-center">
-              <button
-                onClick={onStartNew}
-                className="bg-white text-black text-sm font-bold uppercase tracking-widest px-10 py-3.5 hover:bg-neutral-100 w-72 border-2 border-black"
-              >
-                Start New
-              </button>
-            </div>
+        {/* Two buttons */}
+        <div className="flex gap-5">
+          {/* Start New */}
+          <button
+            onClick={onStartNew}
+            className="bg-white text-black text-sm font-bold uppercase tracking-widest px-10 py-3.5 hover:bg-neutral-100 w-72 border-2 border-black"
+          >
+            + New Trip
+          </button>
 
-            {/* Continue Plan */}
-            <div className="relative flex flex-col items-center">
-              <button
-                onClick={() => setShowTrips(!showTrips)}
-                className={`text-sm font-bold uppercase tracking-widest px-10 py-3.5 w-72 ${
-                  savedTrips.length === 0
-                    ? "bg-neutral-300 text-neutral-500 cursor-not-allowed"
-                    : "bg-black text-white hover:bg-neutral-800"
-                }`}
-                disabled={savedTrips.length === 0}
-              >
-                Continue Plan &rarr;
-              </button>
-
-              {/* Trip cards — dynamically from localStorage */}
-              {showTrips && savedTrips.length > 0 && (
-                <div className="absolute top-full mt-4 left-0 flex gap-2">
-                  {savedTrips.map((trip) => (
-                    <div key={trip.id} className="relative group">
-                      <button
-                        onClick={() => onSelectTrip(trip.id)}
-                        className="w-40 border-2 border-solid border-black px-2.5 py-1.5 hover:bg-neutral-50 text-left bg-white"
-                      >
-                        <span className="text-[10px] font-bold text-black block uppercase tracking-wider">
-                          {trip.title}
-                        </span>
-                        <span className="font-mono text-[8px] uppercase tracking-[0.15em] text-black/50 mt-0.5 block leading-relaxed">
-                          {trip.startCity && trip.endCity
-                            ? `${trip.startCity} to ${trip.endCity}`
-                            : "New trip"}
-                          <br />
-                          {trip.totalDays} days{trip.startDate ? ` / ${formatMonth(trip.startDate)}` : ""}
-                        </span>
-                      </button>
-                      {/* Delete button — hover only */}
-                      <button
-                        onClick={(e) => {
-                          e.stopPropagation();
-                          deleteTrip(trip.id);
-                          setSavedTrips(listTrips());
-                        }}
-                        className="absolute -top-2 -right-2 w-5 h-5 bg-black text-white text-xs flex items-center justify-center opacity-0 group-hover:opacity-100 transition-opacity hover:bg-red-600"
-                      >
-                        &times;
-                      </button>
-                    </div>
-                  ))}
+          {/* Continue Planning */}
+          {cloudEnabled ? (
+            <div className="relative">
+              {!showPassphraseInput ? (
+                <button
+                  onClick={() => setShowPassphraseInput(true)}
+                  className="bg-black text-white text-sm font-bold uppercase tracking-widest px-10 py-3.5 hover:bg-neutral-800 w-72"
+                >
+                  Continue Planning &rarr;
+                </button>
+              ) : (
+                <div className="bg-white border-2 border-black flex items-stretch w-72">
+                  <input
+                    autoFocus
+                    type="password"
+                    value={passphrase}
+                    onChange={(e) => { setPassphrase(e.target.value); setError(""); }}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") handleContinue();
+                      if (e.key === "Escape") {
+                        setShowPassphraseInput(false);
+                        setPassphrase("");
+                        setError("");
+                      }
+                    }}
+                    placeholder="(passkey here)"
+                    className="flex-1 px-4 py-3 text-sm font-bold uppercase tracking-wide text-black placeholder:text-black/25 focus:outline-none bg-transparent"
+                  />
+                  <button
+                    onClick={handleContinue}
+                    disabled={loading || !passphrase.trim()}
+                    className="bg-black text-white text-[10px] font-bold uppercase tracking-widest px-4 hover:bg-neutral-800 disabled:bg-neutral-300 disabled:text-neutral-500 shrink-0"
+                  >
+                    {loading ? "..." : "Go"}
+                  </button>
                 </div>
               )}
+
+              {/* Error */}
+              {error && (
+                <p className="absolute top-full mt-2 text-[10px] font-bold uppercase tracking-widest text-red-500 text-center w-full">
+                  {error}
+                </p>
+              )}
             </div>
-          </div>
+          ) : (
+            <button
+              onClick={onStartNew}
+              className="bg-neutral-300 text-neutral-500 text-sm font-bold uppercase tracking-widest px-10 py-3.5 w-72 cursor-not-allowed"
+              disabled
+              title="Cloud sync not configured"
+            >
+              Continue Planning
+            </button>
+          )}
         </div>
       </div>
     </div>
