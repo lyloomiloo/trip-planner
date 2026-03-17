@@ -5,29 +5,40 @@ import EditableText from "./EditableText";
 
 interface GallerySlotProps {
   slot: GallerySlotType;
+  slotIndex: number;
   onClickEmpty?: () => void;
   onClickSearch?: () => void;
   onClickPasteUrl?: () => void;
   onRemove?: () => void;
   onUpdateCaption?: (caption: string) => void;
-  onResize?: (size: "small" | "medium" | "large") => void;
+  onDragStart?: (index: number) => void;
+  onDragOver?: (index: number) => void;
+  onDragEnd?: () => void;
 }
 
 export default function GallerySlot({
   slot,
+  slotIndex,
   onClickEmpty,
   onClickSearch,
   onClickPasteUrl,
   onRemove,
   onUpdateCaption,
-  onResize,
+  onDragStart,
+  onDragOver,
+  onDragEnd,
 }: GallerySlotProps) {
   const isLocked = !onClickEmpty && !onClickSearch;
+  const isDraggable = !isLocked && !!slot.url && !!onDragStart;
 
   if (!slot.url) {
-    // Empty slot — should not render in locked mode (filtered upstream)
+    // Empty slot
     return (
-      <div className="relative group h-full">
+      <div
+        className="relative group h-full"
+        onDragOver={(e) => { e.preventDefault(); onDragOver?.(slotIndex); }}
+        onDrop={() => onDragEnd?.()}
+      >
         <div
           onClick={onClickEmpty}
           className="gallery-slot-empty w-full h-full flex-col gap-2 cursor-pointer"
@@ -37,28 +48,6 @@ export default function GallerySlot({
             Click to search images
           </span>
         </div>
-
-        {/* Size toggle on hover */}
-        {onResize && (
-          <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 flex gap-0.5">
-            {(["S", "M", "L"] as const).map((label) => {
-              const size = label === "S" ? "small" : label === "M" ? "medium" : "large";
-              return (
-                <button
-                  key={label}
-                  onClick={(e) => { e.stopPropagation(); onResize(size); }}
-                  className={`w-5 h-5 text-[9px] font-bold border ${
-                    slot.size === size
-                      ? "bg-black text-white border-black"
-                      : "bg-white text-neutral-500 border-neutral-300 hover:border-black"
-                  }`}
-                >
-                  {label}
-                </button>
-              );
-            })}
-          </div>
-        )}
 
         {/* Remove slot button */}
         {onRemove && (
@@ -75,12 +64,19 @@ export default function GallerySlot({
 
   // Filled slot
   return (
-    <div className="relative group w-full h-full overflow-hidden">
+    <div
+      className={`relative group w-full h-full overflow-hidden ${isDraggable ? "cursor-grab active:cursor-grabbing" : ""}`}
+      draggable={isDraggable}
+      onDragStart={() => onDragStart?.(slotIndex)}
+      onDragOver={(e) => { e.preventDefault(); onDragOver?.(slotIndex); }}
+      onDrop={() => onDragEnd?.()}
+      onDragEnd={() => onDragEnd?.()}
+    >
       {/* Image */}
       <img
         src={slot.url}
         alt={slot.caption || "Gallery image"}
-        className="w-full h-full object-cover"
+        className="w-full h-full object-cover pointer-events-none"
       />
 
       {/* Attribution overlay */}
@@ -120,28 +116,6 @@ export default function GallerySlot({
               ✕
             </button>
           )}
-        </div>
-      )}
-
-      {/* Size toggle on hover — only when not locked */}
-      {onResize && (
-        <div className="absolute top-1 right-1 opacity-0 group-hover:opacity-100 flex gap-0.5">
-          {(["S", "M", "L"] as const).map((label) => {
-            const size = label === "S" ? "small" : label === "M" ? "medium" : "large";
-            return (
-              <button
-                key={label}
-                onClick={(e) => { e.stopPropagation(); onResize(size); }}
-                className={`w-5 h-5 text-[9px] font-bold border ${
-                  slot.size === size
-                    ? "bg-black text-white border-black"
-                    : "bg-white/80 text-neutral-500 border-neutral-300 hover:border-black"
-                }`}
-              >
-                {label}
-              </button>
-            );
-          })}
         </div>
       )}
 

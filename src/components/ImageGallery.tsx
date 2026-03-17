@@ -1,6 +1,6 @@
 "use client";
 
-import { useState, useCallback, useMemo } from "react";
+import { useState, useCallback, useMemo, useRef } from "react";
 import type { GallerySlot as GallerySlotType } from "@/types/itinerary";
 import GallerySlot from "./GallerySlot";
 import ImageSearchModal from "./ImageSearchModal";
@@ -211,6 +211,26 @@ export default function ImageGallery({
   const [autoFilling, setAutoFilling] = useState(false);
   const [autoFillPage, setAutoFillPage] = useState(1);
 
+  // Drag-and-swap state
+  const dragFromRef = useRef<number | null>(null);
+  const dragToRef = useRef<number | null>(null);
+
+  const handleDragStart = (index: number) => { dragFromRef.current = index; };
+  const handleDragOver = (index: number) => { dragToRef.current = index; };
+  const handleDragEnd = () => {
+    const from = dragFromRef.current;
+    const to = dragToRef.current;
+    if (from !== null && to !== null && from !== to) {
+      // Swap the two slots' content (url, caption, attribution, source)
+      const slotA = gallery[from];
+      const slotB = gallery[to];
+      onUpdateSlot(from, { url: slotB.url, caption: slotB.caption, attribution: slotB.attribution, source: slotB.source });
+      onUpdateSlot(to, { url: slotA.url, caption: slotA.caption, attribution: slotA.attribution, source: slotA.source });
+    }
+    dragFromRef.current = null;
+    dragToRef.current = null;
+  };
+
   const openModal = (index: number, tab: "search" | "url" | "upload" = "search") => {
     setActiveSlotIndex(index);
     setDefaultTab(tab);
@@ -346,6 +366,7 @@ export default function ImageGallery({
               >
                 <GallerySlot
                   slot={slot}
+                  slotIndex={originalIndex}
                   onClickEmpty={locked ? undefined : () => openModal(originalIndex, "search")}
                   onClickSearch={locked ? undefined : () => openModal(originalIndex, "search")}
                   onClickPasteUrl={locked ? undefined : () => openModal(originalIndex, "url")}
@@ -357,7 +378,9 @@ export default function ImageGallery({
                     }
                   }}
                   onUpdateCaption={locked ? undefined : (caption) => onUpdateSlot(originalIndex, { caption })}
-                  onResize={locked ? undefined : (size) => onUpdateSlot(originalIndex, { size })}
+                  onDragStart={locked ? undefined : handleDragStart}
+                  onDragOver={locked ? undefined : handleDragOver}
+                  onDragEnd={locked ? undefined : handleDragEnd}
                 />
               </div>
             );
@@ -373,6 +396,7 @@ export default function ImageGallery({
             >
               <GallerySlot
                 slot={slot}
+                slotIndex={originalIndex}
                 onClickEmpty={locked ? undefined : () => openModal(originalIndex, "search")}
                 onClickSearch={locked ? undefined : () => openModal(originalIndex, "search")}
                 onClickPasteUrl={locked ? undefined : () => openModal(originalIndex, "url")}
@@ -384,7 +408,9 @@ export default function ImageGallery({
                   }
                 }}
                 onUpdateCaption={locked ? undefined : (caption) => onUpdateSlot(originalIndex, { caption })}
-                onResize={locked ? undefined : (size) => onUpdateSlot(originalIndex, { size })}
+                onDragStart={locked ? undefined : handleDragStart}
+                onDragOver={locked ? undefined : handleDragOver}
+                onDragEnd={locked ? undefined : handleDragEnd}
               />
             </div>
           );

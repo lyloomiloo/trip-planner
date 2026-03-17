@@ -78,7 +78,7 @@ export default function ImageSearchModal({
 // ─── Search Tab ──────────────────────────────────────────
 
 function SearchTab({ onSelect }: { onSelect: ImageSearchModalProps["onSelect"] }) {
-  const { results, loading, search, provider } = useImageSearch();
+  const { results, loading, search, loadMore, provider } = useImageSearch();
   const [input, setInput] = useState("");
 
   const handleSearch = () => {
@@ -123,7 +123,7 @@ function SearchTab({ onSelect }: { onSelect: ImageSearchModalProps["onSelect"] }
         </button>
       </div>
 
-      {loading && (
+      {loading && results.length === 0 && (
         <div className="text-center py-8 text-neutral-400 text-sm">Searching...</div>
       )}
 
@@ -147,6 +147,19 @@ function SearchTab({ onSelect }: { onSelect: ImageSearchModalProps["onSelect"] }
           </button>
         ))}
       </div>
+
+      {/* Load More */}
+      {results.length > 0 && (
+        <div className="flex justify-center mt-4">
+          <button
+            onClick={loadMore}
+            disabled={loading}
+            className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-black disabled:text-neutral-200 border-2 border-neutral-300 hover:border-black px-6 py-2 transition-colors"
+          >
+            {loading ? "Loading..." : "Load More"}
+          </button>
+        </div>
+      )}
     </div>
   );
 }
