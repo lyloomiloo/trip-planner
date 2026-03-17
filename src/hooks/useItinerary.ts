@@ -28,6 +28,7 @@ type Action =
   | { type: "ADD_DAY"; day: DayData }
   | { type: "REMOVE_DAY"; dayIndex: number }
   | { type: "MOVE_DAY"; fromIndex: number; toIndex: number }
+  | { type: "MOVE_CITY_BLOCK"; fromCityId: string; direction: "up" | "down" }
   | { type: "UPDATE_TITLE"; title: string[] }
   | { type: "ADD_CITY"; cityId: string; city: CityData }
   | { type: "UPDATE_CITY"; cityId: string; updates: Partial<CityData> }
@@ -170,6 +171,30 @@ function itineraryReducer(state: ItineraryData, action: Action): ItineraryData {
       const [moved] = days.splice(action.fromIndex, 1);
       days.splice(action.toIndex, 0, moved);
       return { ...state, days: renumberDays(days) };
+    }
+
+    case "MOVE_CITY_BLOCK": {
+      // Group days into city blocks (consecutive days with same cityId)
+      const blocks: { cityId: string; days: typeof state.days }[] = [];
+      for (const day of state.days) {
+        const last = blocks[blocks.length - 1];
+        if (last && last.cityId === day.cityId) {
+          last.days.push(day);
+        } else {
+          blocks.push({ cityId: day.cityId, days: [day] });
+        }
+      }
+      const blockIdx = blocks.findIndex((b) => b.cityId === action.fromCityId);
+      if (blockIdx < 0) return state;
+      const targetIdx = action.direction === "up" ? blockIdx - 1 : blockIdx + 1;
+      if (targetIdx < 0 || targetIdx >= blocks.length) return state;
+      // Swap blocks
+      const temp = blocks[blockIdx];
+      blocks[blockIdx] = blocks[targetIdx];
+      blocks[targetIdx] = temp;
+      // Flatten back
+      const newDays = blocks.flatMap((b) => b.days);
+      return { ...state, days: renumberDays(newDays) };
     }
 
     case "UPDATE_TITLE": {
@@ -330,6 +355,12 @@ export function useItinerary(tripId?: string, initialData?: ItineraryData) {
     []
   );
 
+  const moveCityBlock = useCallback(
+    (cityId: string, direction: "up" | "down") =>
+      dispatch({ type: "MOVE_CITY_BLOCK", fromCityId: cityId, direction }),
+    []
+  );
+
   const updateTitle = useCallback(
     (title: string[]) => dispatch({ type: "UPDATE_TITLE", title }),
     []
@@ -403,6 +434,7 @@ export function useItinerary(tripId?: string, initialData?: ItineraryData) {
     addDay,
     removeDay,
     moveDay,
+    moveCityBlock,
     updateTitle,
     addCity,
     updateCity,

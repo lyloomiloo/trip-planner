@@ -10,9 +10,10 @@ interface OverviewProps {
   onClose: () => void;
   onMoveDay: (fromIndex: number, toIndex: number) => void;
   onRemoveDay: (dayIndex: number) => void;
+  onMoveCityBlock?: (cityId: string, direction: "up" | "down") => void;
 }
 
-export default function Overview({ data, onClose, onMoveDay, onRemoveDay }: OverviewProps) {
+export default function Overview({ data, onClose, onMoveDay, onRemoveDay, onMoveCityBlock }: OverviewProps) {
   const [downloading, setDownloading] = useState(false);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
@@ -110,7 +111,7 @@ export default function Overview({ data, onClose, onMoveDay, onRemoveDay }: Over
               <div key={`${day.dayNumber}-${idx}`}>
                 {/* City divider */}
                 {showCityHeader && city && (
-                  <div className="flex items-center gap-3 mb-2 mt-4 first:mt-0">
+                  <div className="flex items-center gap-3 mb-2 mt-4 first:mt-0 group/city">
                     <span className="text-[10px] font-bold uppercase tracking-widest bg-black text-white px-2.5 py-1">
                       {city.name}
                     </span>
@@ -120,6 +121,25 @@ export default function Overview({ data, onClose, onMoveDay, onRemoveDay }: Over
                       </span>
                     )}
                     <div className="flex-1 h-px bg-neutral-200" />
+                    {/* City reorder arrows */}
+                    {onMoveCityBlock && (
+                      <div className="flex gap-1 opacity-0 group-hover/city:opacity-100 transition-opacity" data-no-pdf>
+                        <button
+                          onClick={() => onMoveCityBlock(day.cityId, "up")}
+                          className="w-6 h-6 text-[10px] border border-neutral-300 bg-white hover:bg-neutral-100 flex items-center justify-center"
+                          title="Move city up"
+                        >
+                          ↑
+                        </button>
+                        <button
+                          onClick={() => onMoveCityBlock(day.cityId, "down")}
+                          className="w-6 h-6 text-[10px] border border-neutral-300 bg-white hover:bg-neutral-100 flex items-center justify-center"
+                          title="Move city down"
+                        >
+                          ↓
+                        </button>
+                      </div>
+                    )}
                   </div>
                 )}
 

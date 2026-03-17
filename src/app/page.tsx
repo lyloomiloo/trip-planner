@@ -48,6 +48,7 @@ export default function Home() {
     addDay,
     removeDay,
     moveDay,
+    moveCityBlock,
     loadData,
     importJSON,
     reset,
@@ -205,8 +206,16 @@ export default function Home() {
         updateCity(cityId, result.data);
         removePendingCity(cityId);
       } else if (result.status === "rate-limited") {
+        // Queue remaining cities too
         queuePendingCity(cityId, dest.city);
-        showToast("The LLM is generating city summaries — check back shortly");
+        const remaining = formData.destinations.slice(formData.destinations.indexOf(dest) + 1);
+        for (const r of remaining) {
+          const rId = r.city.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-");
+          queuePendingCity(rId, r.city);
+        }
+        showToast("Rate limited — remaining cities will auto-generate in ~60 seconds");
+        setGeneratingCityId(null);
+        break; // Stop the loop, let the retry interval handle the rest
       }
       setGeneratingCityId(null);
     }
@@ -352,13 +361,14 @@ export default function Home() {
     setGeneratingCityId(null);
   }, [addCity, addDay, updateCity, showToast, state.days]);
 
-  // Retry any queued cities on mount (user returned after rate limit)
+  // Retry any queued cities — on mount + every 60 seconds
   useEffect(() => {
     if (view !== "trip") return;
-    const pending = getPendingCities();
-    if (pending.length === 0) return;
 
-    (async () => {
+    const retryPending = async () => {
+      const pending = getPendingCities();
+      if (pending.length === 0) return;
+
       for (const { cityId, cityName } of pending) {
         if (state.cities[cityId]?.description) {
           removePendingCity(cityId);
@@ -370,12 +380,19 @@ export default function Home() {
           updateCity(cityId, result.data);
           removePendingCity(cityId);
         } else if (result.status === "rate-limited") {
-          showToast("Still rate-limited — summaries will generate when the limit resets");
+          // Stop trying — will retry on next interval
           break;
         }
         setGeneratingCityId(null);
       }
-    })();
+    };
+
+    // Retry immediately on mount
+    retryPending();
+
+    // Then retry every 60 seconds
+    const interval = setInterval(retryPending, 60_000);
+    return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
 
@@ -457,6 +474,7 @@ export default function Home() {
           onClose={() => setShowOverview(false)}
           onMoveDay={moveDay}
           onRemoveDay={removeDay}
+          onMoveCityBlock={moveCityBlock}
         />
       )}
 
