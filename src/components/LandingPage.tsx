@@ -87,7 +87,7 @@ export default function LandingPage({ onSelectTrip, onStartNew }: LandingPagePro
 
               {/* Trip cards — dynamically from localStorage */}
               {showTrips && savedTrips.length > 0 && (
-                <div className="absolute top-full mt-4 left-0 flex flex-wrap gap-2">
+                <div className="absolute top-full mt-4 left-0 flex gap-2">
                   {savedTrips.map((trip) => (
                     <div key={trip.id} className="relative group">
                       <button

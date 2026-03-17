@@ -1,19 +1,36 @@
 "use client";
 
+import { useState } from "react";
 import type { CityData } from "@/types/itinerary";
 
-export default function CityIntroSlide({ city }: { city: CityData }) {
+interface CityIntroSlideProps {
+  city: CityData;
+  maxCityNameLength: number;
+  isGenerating?: boolean;
+  cityId?: string;
+  onMoveUp?: () => void;
+  onMoveDown?: () => void;
+  onRemove?: () => void;
+  isFirst?: boolean;
+  isLast?: boolean;
+}
+
+export default function CityIntroSlide({ city, maxCityNameLength, isGenerating, onMoveUp, onMoveDown, onRemove, isFirst, isLast }: CityIntroSlideProps) {
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
   const fallbackSrc = `https://maps.google.com/maps?q=${encodeURIComponent(
     city.name + ", " + city.country
   )}&z=${city.mapZoom}&output=embed`;
 
   return (
-    <section className="relative h-screen w-full overflow-hidden border-b-2 border-black flex">
+    <section className="group/city relative w-full overflow-hidden border-b-2 border-black flex snap-start" style={{ height: "var(--slide-h)" }}>
       {/* Left panel — city info, scrollable */}
       <div className="w-[22%] shrink-0 bg-white z-20 border-r-2 border-black overflow-y-auto">
         <div className="px-6 py-10">
-          {/* City name + country */}
-          <h2 className="text-4xl font-black uppercase tracking-tight leading-tight">
+          {/* City name + country — sized to fill column based on longest city name */}
+          <h2
+            className="font-black uppercase tracking-tight leading-none whitespace-nowrap"
+            style={{ fontSize: `calc((22vw - 48px) * ${1 / (maxCityNameLength * 0.68)})` }}
+          >
             {city.name}
           </h2>
           <span className="retro-label mt-2 inline-block">
@@ -21,6 +38,12 @@ export default function CityIntroSlide({ city }: { city: CityData }) {
           </span>
 
           <div className="w-6 h-0.5 bg-black mt-4 mb-4" />
+
+          {isGenerating && (
+            <p className="text-[10px] uppercase tracking-widest text-neutral-400 animate-pulse mb-3">
+              Generating city info...
+            </p>
+          )}
 
           <p className="text-xs leading-relaxed text-neutral-600">
             {city.description}
@@ -131,6 +154,37 @@ export default function CityIntroSlide({ city }: { city: CityData }) {
           {city.countryLabel}
         </span>
       </div>
+
+      {/* Bottom-right hover controls */}
+      {(onMoveUp || onMoveDown || onRemove) && (
+        <div className="absolute bottom-6 right-6 z-30 flex gap-2 opacity-0 group-hover/city:opacity-100 transition-opacity">
+          {!confirmingRemove ? (
+            <>
+              {onMoveUp && !isFirst && (
+                <button onClick={onMoveUp} className="bg-black text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 hover:bg-neutral-800">
+                  Move Up
+                </button>
+              )}
+              {onMoveDown && !isLast && (
+                <button onClick={onMoveDown} className="bg-black text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 hover:bg-neutral-800">
+                  Move Down
+                </button>
+              )}
+              {onRemove && (
+                <button onClick={() => setConfirmingRemove(true)} className="bg-black text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 hover:bg-red-700">
+                  Remove
+                </button>
+              )}
+            </>
+          ) : (
+            <div className="flex items-center gap-3 bg-white border-2 border-black px-4 py-2">
+              <span className="text-[10px] font-bold uppercase tracking-widest">Remove {city.name}?</span>
+              <button onClick={() => { onRemove?.(); setConfirmingRemove(false); }} className="bg-black text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 hover:bg-red-700">Yes</button>
+              <button onClick={() => setConfirmingRemove(false)} className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-black">Cancel</button>
+            </div>
+          )}
+        </div>
+      )}
     </section>
   );
 }

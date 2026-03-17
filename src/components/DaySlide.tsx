@@ -1,5 +1,6 @@
 "use client";
 
+import { useState } from "react";
 import type { DayData, CityData, ScheduleEvent, GallerySlot as GallerySlotType } from "@/types/itinerary";
 import WeatherWidget from "./WeatherWidget";
 import ImageGallery from "./ImageGallery";
@@ -39,43 +40,13 @@ export default function DaySlide({
   onMoveDay,
   onRemoveDay,
 }: DaySlideProps) {
+  const [confirmingRemove, setConfirmingRemove] = useState(false);
   const dateObj = new Date(day.date + "T00:00:00");
   const dateNum = dateObj.getDate();
   const monthStr = dateObj.toLocaleString("en-GB", { month: "short" }).toUpperCase();
 
   return (
-    <section className="group/day relative min-h-screen w-full px-12 py-10 border-b border-neutral-200">
-      {/* Day reorder/remove controls — visible on hover */}
-      <div className="absolute top-3 left-1/2 -translate-x-1/2 opacity-0 group-hover/day:opacity-100 transition-opacity flex items-center gap-1 z-10">
-        {dayIndex > 0 && (
-          <button
-            onClick={() => onMoveDay(dayIndex, dayIndex - 1)}
-            className="w-7 h-7 flex items-center justify-center bg-white border border-neutral-300 text-neutral-500 hover:border-black hover:text-black text-xs"
-            title="Move day up"
-          >
-            &uarr;
-          </button>
-        )}
-        {dayIndex < totalDays - 1 && (
-          <button
-            onClick={() => onMoveDay(dayIndex, dayIndex + 1)}
-            className="w-7 h-7 flex items-center justify-center bg-white border border-neutral-300 text-neutral-500 hover:border-black hover:text-black text-xs"
-            title="Move day down"
-          >
-            &darr;
-          </button>
-        )}
-        <button
-          onClick={() => {
-            if (confirm(`Remove Day ${day.dayNumber}?`)) onRemoveDay(dayIndex);
-          }}
-          className="w-7 h-7 flex items-center justify-center bg-white border border-neutral-300 text-red-400 hover:border-red-500 hover:text-red-600 text-xs ml-2"
-          title="Remove this day"
-        >
-          &times;
-        </button>
-      </div>
-
+    <section className={`group/day relative w-full px-12 py-10 border-b border-neutral-200 overflow-hidden ${dayIndex < totalDays - 1 ? "snap-start" : ""}`} style={{ height: "var(--slide-h)" }}>
       {/* Top row: Weather (left) + Day header (right) */}
       <div className="flex justify-between items-start mb-8">
         {/* Weather widget — top left */}
@@ -144,6 +115,54 @@ export default function DaySlide({
         />
         <span className="mx-2">/</span>
         {city.name}, {city.country}
+      </div>
+
+      {/* Bottom-right hover controls */}
+      <div className="absolute bottom-6 right-6 z-20 flex gap-2 opacity-0 group-hover/day:opacity-100 transition-opacity">
+        {!confirmingRemove ? (
+          <>
+            {dayIndex > 0 && (
+              <button
+                onClick={() => onMoveDay(dayIndex, dayIndex - 1)}
+                className="bg-black text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 hover:bg-neutral-800"
+              >
+                Move Up
+              </button>
+            )}
+            {dayIndex < totalDays - 1 && (
+              <button
+                onClick={() => onMoveDay(dayIndex, dayIndex + 1)}
+                className="bg-black text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 hover:bg-neutral-800"
+              >
+                Move Down
+              </button>
+            )}
+            <button
+              onClick={() => setConfirmingRemove(true)}
+              className="bg-black text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1.5 hover:bg-red-700"
+            >
+              Remove
+            </button>
+          </>
+        ) : (
+          <div className="flex items-center gap-3 bg-white border-2 border-black px-4 py-2">
+            <span className="text-[10px] font-bold uppercase tracking-widest">
+              Remove Day {day.dayNumber}?
+            </span>
+            <button
+              onClick={() => { onRemoveDay(dayIndex); setConfirmingRemove(false); }}
+              className="bg-black text-white text-[10px] font-bold uppercase tracking-widest px-3 py-1 hover:bg-red-700"
+            >
+              Yes
+            </button>
+            <button
+              onClick={() => setConfirmingRemove(false)}
+              className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-black"
+            >
+              Cancel
+            </button>
+          </div>
+        )}
       </div>
     </section>
   );

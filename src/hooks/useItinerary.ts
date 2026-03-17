@@ -4,6 +4,7 @@ import { useReducer, useCallback, useEffect, useRef } from "react";
 import type {
   ItineraryData,
   DayData,
+  CityData,
   ScheduleEvent,
   GallerySlot,
 } from "@/types/itinerary";
@@ -25,6 +26,9 @@ type Action =
   | { type: "REMOVE_DAY"; dayIndex: number }
   | { type: "MOVE_DAY"; fromIndex: number; toIndex: number }
   | { type: "UPDATE_TITLE"; title: string[] }
+  | { type: "ADD_CITY"; cityId: string; city: CityData }
+  | { type: "UPDATE_CITY"; cityId: string; updates: Partial<CityData> }
+  | { type: "REMOVE_CITY"; cityId: string }
   | { type: "LOAD_DATA"; data: ItineraryData }
   | { type: "RESET" };
 
@@ -121,6 +125,27 @@ function itineraryReducer(state: ItineraryData, action: Action): ItineraryData {
 
     case "UPDATE_TITLE": {
       return { ...state, tripTitle: action.title };
+    }
+
+    case "ADD_CITY": {
+      return { ...state, cities: { ...state.cities, [action.cityId]: action.city } };
+    }
+
+    case "UPDATE_CITY": {
+      const existing = state.cities[action.cityId];
+      if (!existing) return state;
+      return {
+        ...state,
+        cities: {
+          ...state.cities,
+          [action.cityId]: { ...existing, ...action.updates },
+        },
+      };
+    }
+
+    case "REMOVE_CITY": {
+      const { [action.cityId]: _, ...rest } = state.cities;
+      return { ...state, cities: rest };
     }
 
     case "LOAD_DATA": {
@@ -224,6 +249,22 @@ export function useItinerary(tripId?: string, initialData?: ItineraryData) {
     []
   );
 
+  const addCity = useCallback(
+    (cityId: string, city: CityData) => dispatch({ type: "ADD_CITY", cityId, city }),
+    []
+  );
+
+  const updateCity = useCallback(
+    (cityId: string, updates: Partial<CityData>) =>
+      dispatch({ type: "UPDATE_CITY", cityId, updates }),
+    []
+  );
+
+  const removeCity = useCallback(
+    (cityId: string) => dispatch({ type: "REMOVE_CITY", cityId }),
+    []
+  );
+
   const loadData = useCallback(
     (data: ItineraryData) => dispatch({ type: "LOAD_DATA", data }),
     []
@@ -274,6 +315,9 @@ export function useItinerary(tripId?: string, initialData?: ItineraryData) {
     removeDay,
     moveDay,
     updateTitle,
+    addCity,
+    updateCity,
+    removeCity,
     loadData,
     reset,
     exportJSON,
