@@ -204,15 +204,40 @@ export function createBlankItinerary(opts: {
   const days: import("@/types/itinerary").DayData[] = [];
   let dayCounter = 0;
 
+  const toDateStr = (d: Date) =>
+    `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
+
+  const makeGallery = () => [
+    { url: null, caption: null, size: "large" as const, slot: "A" },
+    { url: null, caption: null, size: "medium" as const, slot: "B" },
+    { url: null, caption: null, size: "medium" as const, slot: "C" },
+    { url: null, caption: null, size: "small" as const, slot: "D" },
+    { url: null, caption: null, size: "large" as const, slot: "E" },
+  ];
+
   opts.destinations.forEach((dest, destIdx) => {
     const cityId = cityIds[destIdx];
     const prevCity = destIdx > 0 ? opts.destinations[destIdx - 1].city.toUpperCase() : opts.origin.toUpperCase();
     const currentCity = dest.city.toUpperCase();
 
+    // Insert city-intro entry
+    const introDate = new Date(start);
+    introDate.setDate(introDate.getDate() + dayCounter);
+    days.push({
+      dayNumber: 0,
+      date: toDateStr(introDate),
+      weekday: weekdays[introDate.getDay()],
+      cityId,
+      route: "",
+      accommodation: "",
+      events: [],
+      gallery: [],
+      isCityIntro: true,
+    });
+
     for (let night = 0; night < dest.nights; night++) {
       const d = new Date(start);
       d.setDate(d.getDate() + dayCounter);
-      const dateStr = `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
 
       // Route label: first day of each city shows travel route
       let route = "";
@@ -222,24 +247,39 @@ export function createBlankItinerary(opts: {
 
       days.push({
         dayNumber: dayCounter + 1,
-        date: dateStr,
+        date: toDateStr(d),
         weekday: weekdays[d.getDay()],
         cityId,
         route,
         accommodation: "",
         events: [],
-        gallery: [
-          { url: null, caption: null, size: "large" as const, slot: "A" },
-          { url: null, caption: null, size: "medium" as const, slot: "B" },
-          { url: null, caption: null, size: "medium" as const, slot: "C" },
-          { url: null, caption: null, size: "small" as const, slot: "D" },
-          { url: null, caption: null, size: "large" as const, slot: "E" },
-        ],
+        gallery: makeGallery(),
       });
 
       dayCounter++;
     }
   });
+
+  // Add departure day — last day for traveling home
+  if (opts.destinations.length > 0) {
+    const lastDest = opts.destinations[opts.destinations.length - 1];
+    const lastCityId = cityIds[cityIds.length - 1];
+    const lastCityName = lastDest.city.toUpperCase();
+    const originName = opts.origin.toUpperCase();
+    const d = new Date(start);
+    d.setDate(d.getDate() + dayCounter);
+
+    days.push({
+      dayNumber: dayCounter + 1,
+      date: toDateStr(d),
+      weekday: weekdays[d.getDay()],
+      cityId: lastCityId,
+      route: `${lastCityName} \u2192 ${originName}`,
+      accommodation: "",
+      events: [],
+      gallery: makeGallery(),
+    });
+  }
 
   return {
     tripTitle: titleWords,

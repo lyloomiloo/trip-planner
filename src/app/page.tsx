@@ -27,6 +27,8 @@ export default function Home() {
   const [activeTripId, setActiveTripId] = useState<string>(DEFAULT_TRIP_ID);
   const [initialData, setInitialData] = useState<ItineraryData | undefined>(undefined);
   const [locked, setLocked] = useState(false);
+  const [addingCityInline, setAddingCityInline] = useState(false);
+  const [newCityInput, setNewCityInput] = useState("");
 
   const {
     state,
@@ -305,6 +307,20 @@ export default function Home() {
     const weekdays = ["Sunday", "Monday", "Tuesday", "Wednesday", "Thursday", "Friday", "Saturday"];
     const nextWeekday = weekdays[new Date(nextDate + "T12:00:00").getDay()];
 
+    // Add city-intro entry first
+    addDay({
+      dayNumber: 0,
+      date: nextDate,
+      weekday: nextWeekday,
+      cityId: id,
+      route: "",
+      accommodation: "",
+      events: [],
+      gallery: [],
+      isCityIntro: true,
+    });
+
+    // Then add the first day for this city
     addDay({
       dayNumber: nextNum,
       date: nextDate,
@@ -322,8 +338,8 @@ export default function Home() {
       ],
     });
 
-    // Auto-scroll to the new day after render
-    pendingScrollRef.current = state.days.length;
+    // Auto-scroll to the new day after render (skip the city-intro entry)
+    pendingScrollRef.current = state.days.length + 1;
 
     // Geocode city
     try {
@@ -571,22 +587,62 @@ export default function Home() {
 
       {/* ADD — compact buttons below last day */}
       {!locked && (
-        <div className="flex items-center justify-center gap-4 py-16">
-          <button
-            onClick={handleAddDay}
-            className="bg-white text-black text-sm font-bold uppercase tracking-widest px-10 py-3.5 border-2 border-black hover:bg-neutral-100"
-          >
-            + Add Day
-          </button>
-          <button
-            onClick={() => {
-              const name = prompt("City name:");
-              if (name?.trim()) handleAddCityDestination(name.trim());
-            }}
-            className="bg-black text-white text-sm font-bold uppercase tracking-widest px-10 py-3.5 border-2 border-black hover:bg-neutral-800"
-          >
-            + Add City
-          </button>
+        <div className="flex flex-col items-center gap-4 py-16">
+          <div className="flex items-center gap-4">
+            <button
+              onClick={handleAddDay}
+              className="bg-white text-black text-sm font-bold uppercase tracking-widest px-10 py-3.5 border-2 border-black hover:bg-neutral-100"
+            >
+              + Add Day
+            </button>
+            {!addingCityInline ? (
+              <button
+                onClick={() => setAddingCityInline(true)}
+                className="bg-black text-white text-sm font-bold uppercase tracking-widest px-10 py-3.5 border-2 border-black hover:bg-neutral-800"
+              >
+                + Add City
+              </button>
+            ) : (
+              <div className="flex items-center gap-2 border-2 border-black px-4 py-2">
+                <input
+                  autoFocus
+                  value={newCityInput}
+                  onChange={(e) => setNewCityInput(e.target.value)}
+                  onKeyDown={(e) => {
+                    if (e.key === "Enter" && newCityInput.trim()) {
+                      handleAddCityDestination(newCityInput.trim());
+                      setNewCityInput("");
+                      setAddingCityInline(false);
+                    }
+                    if (e.key === "Escape") {
+                      setNewCityInput("");
+                      setAddingCityInline(false);
+                    }
+                  }}
+                  placeholder="City name"
+                  className="bg-transparent text-sm font-bold uppercase tracking-widest focus:outline-none w-40 placeholder:text-neutral-300"
+                />
+                <button
+                  onClick={() => {
+                    if (newCityInput.trim()) {
+                      handleAddCityDestination(newCityInput.trim());
+                      setNewCityInput("");
+                      setAddingCityInline(false);
+                    }
+                  }}
+                  className="text-xs font-bold uppercase tracking-widest bg-black text-white px-3 py-1.5 hover:bg-neutral-800"
+                >
+                  Add
+                </button>
+                <button
+                  onClick={() => { setNewCityInput(""); setAddingCityInline(false); }}
+                  className="text-neutral-400 hover:text-black text-sm"
+                >
+                  &times;
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       )}
 
