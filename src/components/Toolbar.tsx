@@ -132,9 +132,9 @@ export default function Toolbar({
           <>
             <span
               className={`w-2 h-2 rounded-full shrink-0 ${
-                syncStatus === "synced" ? "bg-neutral-400" :
-                syncStatus === "syncing" ? "bg-neutral-300 animate-pulse" :
-                "bg-neutral-500"
+                syncStatus === "synced" ? "bg-[#3A8B5C]" :
+                syncStatus === "syncing" ? "bg-[#C49A3B] animate-pulse" :
+                "bg-[#D0D0D0]"
               }`}
               title={
                 syncStatus === "synced" ? "Synced to cloud" :
