@@ -9,7 +9,6 @@ interface ToolbarProps {
   onOverview: () => void;
   onAddDay: () => void;
   onAddCity: (cityName: string) => void;
-  onReset: () => void;
   onBack: () => void;
   locked: boolean;
   onToggleLock: () => void;
@@ -22,7 +21,6 @@ export default function Toolbar({
   onOverview,
   onAddDay,
   onAddCity,
-  onReset,
   onBack,
   locked,
   onToggleLock,
@@ -134,9 +132,9 @@ export default function Toolbar({
           <>
             <span
               className={`w-2 h-2 rounded-full shrink-0 ${
-                syncStatus === "synced" ? "bg-green-400" :
-                syncStatus === "syncing" ? "bg-amber-400 animate-pulse" :
-                "bg-red-400"
+                syncStatus === "synced" ? "bg-neutral-400" :
+                syncStatus === "syncing" ? "bg-neutral-300 animate-pulse" :
+                "bg-neutral-500"
               }`}
               title={
                 syncStatus === "synced" ? "Synced to cloud" :
@@ -153,17 +151,6 @@ export default function Toolbar({
           Overview
         </button>
 
-        {!locked && (
-          <>
-            <span className="text-neutral-200">|</span>
-            <button
-              onClick={onReset}
-              className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 hover:text-red-500 transition-colors"
-            >
-              Reset
-            </button>
-          </>
-        )}
       </div>
     </div>
   );

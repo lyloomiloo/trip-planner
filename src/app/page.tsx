@@ -493,7 +493,6 @@ export default function Home() {
         onOverview={() => setShowOverview(true)}
         onAddDay={handleAddDay}
         onAddCity={handleAddCityDestination}
-        onReset={reset}
         onBack={() => setView("landing")}
         locked={locked}
         onToggleLock={() => setLocked((l) => !l)}
