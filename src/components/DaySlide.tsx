@@ -21,7 +21,7 @@ interface DaySlideProps {
   onRemoveGallerySlot: (dayIndex: number, slotIndex: number) => void;
   onUpdateDayField: (dayIndex: number, field: keyof DayData, value: string) => void;
   onUpdateDayDate?: (dayIndex: number, date: string) => void;
-  onUpdateDayWeatherLoc?: (dayIndex: number, lat: number, lng: number) => void;
+  onUpdateDayWeatherLoc?: (dayIndex: number, lat: number, lng: number, cityName?: string) => void;
   onRemoveDay: (dayIndex: number) => void;
   locked?: boolean;
 }
@@ -70,8 +70,8 @@ export default function DaySlide({
           lat={weatherLat}
           lng={weatherLng}
           date={day.date}
-          cityName={city.name}
-          onUpdateLocation={onUpdateDayWeatherLoc ? (lat, lng) => onUpdateDayWeatherLoc(dayIndex, lat, lng) : undefined}
+          cityName={day.weatherCityName || city.name}
+          onUpdateLocation={onUpdateDayWeatherLoc ? (lat, lng, name) => onUpdateDayWeatherLoc(dayIndex, lat, lng, name) : undefined}
           locked={locked}
         />
 

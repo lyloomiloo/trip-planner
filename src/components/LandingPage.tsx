@@ -78,7 +78,7 @@ export default function LandingPage({ onSelectTrip, onStartNew }: LandingPagePro
           {/* Start New */}
           <button
             onClick={onStartNew}
-            className="bg-white text-black text-sm font-bold uppercase tracking-widest px-10 py-3.5 hover:bg-neutral-100 w-56 border-2 border-black"
+            className="bg-white text-black text-sm font-bold uppercase tracking-widest px-10 py-3.5 hover:bg-neutral-100 w-72 border-2 border-black"
           >
             + New Trip
           </button>
@@ -89,12 +89,12 @@ export default function LandingPage({ onSelectTrip, onStartNew }: LandingPagePro
               {!showPassphraseInput ? (
                 <button
                   onClick={() => setShowPassphraseInput(true)}
-                  className="bg-black text-white text-sm font-bold uppercase tracking-widest px-10 py-3.5 hover:bg-neutral-800 w-56"
+                  className="bg-black text-white text-sm font-bold uppercase tracking-widest px-10 py-3.5 hover:bg-neutral-800 w-72"
                 >
                   Continue Planning &rarr;
                 </button>
               ) : (
-                <div className="bg-white border-2 border-black flex items-stretch w-56">
+                <div className="bg-white border-2 border-black flex items-stretch w-72">
                   <input
                     autoFocus
                     type="password"
@@ -131,7 +131,7 @@ export default function LandingPage({ onSelectTrip, onStartNew }: LandingPagePro
           ) : (
             <button
               onClick={onStartNew}
-              className="bg-neutral-300 text-neutral-500 text-sm font-bold uppercase tracking-widest px-10 py-3.5 w-56 cursor-not-allowed"
+              className="bg-neutral-300 text-neutral-500 text-sm font-bold uppercase tracking-widest px-10 py-3.5 w-72 cursor-not-allowed"
               disabled
               title="Cloud sync not configured"
             >

@@ -8,7 +8,7 @@ interface WeatherWidgetProps {
   lng: number;
   date: string; // "2026-03-26"
   cityName?: string;
-  onUpdateLocation?: (lat: number, lng: number) => void;
+  onUpdateLocation?: (lat: number, lng: number, cityName?: string) => void;
   locked?: boolean;
 }
 
@@ -30,7 +30,7 @@ export default function WeatherWidget({ lat, lng, date, cityName, onUpdateLocati
       );
       const results = await res.json();
       if (results?.[0] && onUpdateLocation) {
-        onUpdateLocation(parseFloat(results[0].lat), parseFloat(results[0].lon));
+        onUpdateLocation(parseFloat(results[0].lat), parseFloat(results[0].lon), locInput.trim());
         setEditing(false);
         setLocInput("");
       }

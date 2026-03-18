@@ -9,9 +9,10 @@ interface CityIntroSlideProps {
   isGenerating?: boolean;
   cityId?: string;
   onRemove?: () => void;
+  onRetryGenerate?: () => void;
 }
 
-export default function CityIntroSlide({ city, maxCityNameLength, isGenerating, onRemove }: CityIntroSlideProps) {
+export default function CityIntroSlide({ city, maxCityNameLength, isGenerating, onRemove, onRetryGenerate }: CityIntroSlideProps) {
   const [confirmingRemove, setConfirmingRemove] = useState(false);
   const fallbackSrc = `https://maps.google.com/maps?q=${encodeURIComponent(
     city.name + ", " + city.country
@@ -52,7 +53,18 @@ export default function CityIntroSlide({ city, maxCityNameLength, isGenerating, 
                 Waiting to generate
               </p>
               <p className="text-[9px] text-amber-400 mt-1">
-                Rate limited — will auto-retry shortly
+                Rate limited — will auto-retry shortly or{" "}
+                {onRetryGenerate ? (
+                  <button
+                    onClick={onRetryGenerate}
+                    className="underline text-amber-600 hover:text-amber-800 font-bold"
+                  >
+                    click here
+                  </button>
+                ) : (
+                  <span>click here</span>
+                )}{" "}
+                to refresh manually.
               </p>
             </div>
           )}

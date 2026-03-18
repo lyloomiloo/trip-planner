@@ -28,6 +28,8 @@ export interface DayData {
   gallery: GallerySlot[];
   weatherLat?: number;  // override city lat for weather
   weatherLng?: number;  // override city lng for weather
+  weatherCityName?: string;  // override city name for weather display
+  isCityIntro?: boolean;  // true = this is a city intro slide, not a day
 }
 
 export interface CityData {

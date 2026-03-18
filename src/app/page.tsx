@@ -98,20 +98,13 @@ export default function Home() {
     return Math.max(...lengths, 1);
   }, [state.cities]);
 
-  // Build a flat slide list: city intro inserted when cityId changes between consecutive days
+  // Build a flat slide list directly from the days array (which now includes city-intro entries)
   const flatSlides = useMemo(() => {
-    const slides: ({ type: "city-intro"; cityId: string } | { type: "day"; dayIndex: number })[] = [];
-    let lastCityId: string | null = null;
-
-    state.days.forEach((day, i) => {
-      if (day.cityId !== lastCityId) {
-        slides.push({ type: "city-intro", cityId: day.cityId });
-        lastCityId = day.cityId;
-      }
-      slides.push({ type: "day", dayIndex: i });
-    });
-
-    return slides;
+    return state.days.map((day, i) =>
+      day.isCityIntro
+        ? { type: "city-intro" as const, cityId: day.cityId, dayIndex: i }
+        : { type: "day" as const, dayIndex: i }
+    );
   }, [state.days]);
 
   // Slide index entries for the scroll nav
@@ -123,7 +116,7 @@ export default function Home() {
       if (slide.type === "city-intro") {
         const city = state.cities[slide.cityId];
         entries.push({
-          id: `slide-city-${slide.cityId}-${i}`,
+          id: `slide-city-${slide.dayIndex}`,
           label: city?.name ?? slide.cityId,
           type: "city",
         });
@@ -379,10 +372,8 @@ export default function Home() {
         if (result.status === "ok") {
           updateCity(cityId, result.data);
           removePendingCity(cityId);
-        } else if (result.status === "rate-limited") {
-          // Stop trying — will retry on next interval
-          break;
         }
+        // On rate-limited or error, leave in queue — next cycle will retry
         setGeneratingCityId(null);
       }
     };
@@ -390,8 +381,8 @@ export default function Home() {
     // Retry immediately on mount
     retryPending();
 
-    // Then retry every 60 seconds
-    const interval = setInterval(retryPending, 60_000);
+    // Then retry every 45 seconds
+    const interval = setInterval(retryPending, 45_000);
     return () => clearInterval(interval);
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [view]);
@@ -474,7 +465,6 @@ export default function Home() {
           onClose={() => setShowOverview(false)}
           onMoveDay={moveDay}
           onRemoveDay={removeDay}
-          onMoveCityBlock={moveCityBlock}
         />
       )}
 
@@ -524,7 +514,7 @@ export default function Home() {
           const city = state.cities[slide.cityId];
           if (!city) return null;
           return (
-            <div key={`city-${slide.cityId}-${i}`} id={`slide-city-${slide.cityId}-${i}`} data-slide>
+            <div key={`city-${slide.dayIndex}`} id={`slide-city-${slide.dayIndex}`} data-slide>
               <CityIntroSlide
                 city={city}
                 cityId={slide.cityId}
@@ -537,6 +527,15 @@ export default function Home() {
                     .reverse();
                   dayIndicesToRemove.forEach(idx => removeDay(idx));
                   removeCity(slide.cityId);
+                }}
+                onRetryGenerate={async () => {
+                  setGeneratingCityId(slide.cityId);
+                  const result = await generateCityDetails(city.name);
+                  if (result.status === "ok") {
+                    updateCity(slide.cityId, result.data);
+                    removePendingCity(slide.cityId);
+                  }
+                  setGeneratingCityId(null);
                 }}
               />
             </div>
@@ -552,7 +551,7 @@ export default function Home() {
               day={day}
               city={city}
               dayIndex={slide.dayIndex}
-              totalDays={state.days.length}
+              totalDays={state.days.filter(d => !d.isCityIntro).length}
               onUpdateEvent={updateEvent}
               onAddEvent={addEvent}
               onRemoveEvent={removeEvent}

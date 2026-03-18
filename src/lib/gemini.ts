@@ -5,7 +5,7 @@ export type GenerateResult =
   | { status: "rate-limited" }
   | { status: "error" };
 
-const MAX_RETRIES = 3;
+const MAX_RETRIES = 5;
 
 export async function generateCityDetails(
   cityName: string
@@ -19,7 +19,13 @@ export async function generateCityDetails(
       });
 
       if (res.status === 429 || res.status === 503) {
-        const waitSec = Math.min(15 * (attempt + 1), 60);
+        // Parse retry delay from response if available
+        let waitSec = Math.min(20 * (attempt + 1), 90);
+        try {
+          const body = await res.json();
+          const match = body.details?.match(/retryDelay.*?(\d+)s/);
+          if (match) waitSec = Math.max(parseInt(match[1]) + 5, waitSec);
+        } catch { /* use default */ }
         console.warn(
           `[gemini] Rate limited for "${cityName}", retrying in ${waitSec}s (attempt ${attempt + 1}/${MAX_RETRIES})`
         );
@@ -28,7 +34,7 @@ export async function generateCityDetails(
       }
 
       if (!res.ok) {
-        console.error("[gemini] API error for", cityName);
+        console.error("[gemini] API error for", cityName, "status:", res.status);
         return { status: "error" };
       }
 
@@ -37,11 +43,15 @@ export async function generateCityDetails(
       return { status: "ok", data };
     } catch (err) {
       console.error("[gemini] Fetch error for", cityName, ":", err);
+      if (attempt < MAX_RETRIES - 1) {
+        await new Promise((r) => setTimeout(r, 10_000));
+        continue;
+      }
       return { status: "error" };
     }
   }
 
-  console.error("[gemini] All retries exhausted for", cityName);
+  console.warn("[gemini] All retries exhausted for", cityName, "— will retry on next cycle");
   return { status: "rate-limited" };
 }
 

@@ -24,7 +24,7 @@ type Action =
   | { type: "REMOVE_GALLERY_SLOT"; dayIndex: number; slotIndex: number }
   | { type: "UPDATE_DAY_FIELD"; dayIndex: number; field: keyof DayData; value: string }
   | { type: "UPDATE_DAY_DATE"; dayIndex: number; date: string }
-  | { type: "UPDATE_DAY_WEATHER_LOC"; dayIndex: number; lat: number; lng: number }
+  | { type: "UPDATE_DAY_WEATHER_LOC"; dayIndex: number; lat: number; lng: number; cityName?: string }
   | { type: "ADD_DAY"; day: DayData }
   | { type: "REMOVE_DAY"; dayIndex: number }
   | { type: "MOVE_DAY"; fromIndex: number; toIndex: number }
@@ -48,20 +48,64 @@ function toLocalDateStr(d: Date): string {
   return `${y}-${m}-${day}`;
 }
 
-/** Renumber days sequentially and recalculate dates from the first day's date */
+/** Renumber days sequentially and recalculate dates from the first real day's date.
+ *  City-intro entries keep their position but don't count toward day numbers. */
 function renumberDays(days: DayData[]): DayData[] {
   if (days.length === 0) return days;
-  const baseDate = new Date(days[0].date + "T12:00:00");
-  return days.map((d, i) => {
+  // Find the first real (non-city-intro) day for the base date
+  const firstReal = days.find((d) => !d.isCityIntro);
+  if (!firstReal) return days;
+  const baseDate = new Date(firstReal.date + "T12:00:00");
+  let dayCount = 0;
+  return days.map((d) => {
+    if (d.isCityIntro) return d; // skip city intros
     const dt = new Date(baseDate);
-    dt.setDate(dt.getDate() + i);
+    dt.setDate(dt.getDate() + dayCount);
+    dayCount++;
     return {
       ...d,
-      dayNumber: i + 1,
+      dayNumber: dayCount,
       date: toLocalDateStr(dt),
       weekday: WEEKDAYS[dt.getDay()],
     };
   });
+}
+
+/** Ensure city-intro entries exist in the days array.
+ *  Inserts a city-intro before the first day of each city if one doesn't already exist. */
+function ensureCityIntros(days: DayData[], cities: Record<string, import("@/types/itinerary").CityData>): DayData[] {
+  const result: DayData[] = [];
+  let lastCityId: string | null = null;
+
+  for (const day of days) {
+    if (day.isCityIntro) {
+      result.push(day);
+      lastCityId = day.cityId;
+      continue;
+    }
+    // Check if we need to insert a city-intro before this day
+    if (day.cityId !== lastCityId) {
+      // Only insert if there isn't already a city-intro for this city right before
+      const prevEntry = result[result.length - 1];
+      if (!prevEntry || !prevEntry.isCityIntro || prevEntry.cityId !== day.cityId) {
+        result.push({
+          dayNumber: 0,
+          date: day.date,
+          weekday: day.weekday,
+          cityId: day.cityId,
+          route: "",
+          accommodation: "",
+          events: [],
+          gallery: [],
+          isCityIntro: true,
+        });
+      }
+    }
+    result.push(day);
+    lastCityId = day.cityId;
+  }
+
+  return result;
 }
 
 // ─── Reducer ─────────────────────────────────────────────
@@ -139,21 +183,28 @@ function itineraryReducer(state: ItineraryData, action: Action): ItineraryData {
     }
 
     case "UPDATE_DAY_DATE": {
-      // Set the date for this day, then cascade all subsequent days
-      // Use T12:00:00 (noon) to avoid timezone boundary issues
+      // Set the date for this day, then cascade all subsequent real days
       const days = [...state.days];
       const baseDate = new Date(action.date + "T12:00:00");
+      let offset = 0;
       for (let i = action.dayIndex; i < days.length; i++) {
+        if (days[i].isCityIntro) continue;
         const dt = new Date(baseDate);
-        dt.setDate(dt.getDate() + (i - action.dayIndex));
+        dt.setDate(dt.getDate() + offset);
         days[i] = { ...days[i], date: toLocalDateStr(dt), weekday: WEEKDAYS[dt.getDay()] };
+        offset++;
       }
       return { ...state, days };
     }
 
     case "UPDATE_DAY_WEATHER_LOC": {
       const days = [...state.days];
-      days[action.dayIndex] = { ...days[action.dayIndex], weatherLat: action.lat, weatherLng: action.lng };
+      days[action.dayIndex] = {
+        ...days[action.dayIndex],
+        weatherLat: action.lat,
+        weatherLng: action.lng,
+        ...(action.cityName ? { weatherCityName: action.cityName } : {}),
+      };
       return { ...state, days };
     }
 
@@ -223,7 +274,10 @@ function itineraryReducer(state: ItineraryData, action: Action): ItineraryData {
     }
 
     case "LOAD_DATA": {
-      return action.data;
+      return {
+        ...action.data,
+        days: ensureCityIntros(action.data.days, action.data.cities),
+      };
     }
 
     case "RESET": {
@@ -245,7 +299,8 @@ export type SyncStatus = "idle" | "syncing" | "synced" | "error" | "offline";
 
 export function useItinerary(tripId?: string, initialData?: ItineraryData) {
   // Priority: explicit initialData > localStorage > bundled JSON
-  const startData = initialData ?? (tripId ? loadTrip(tripId) : null) ?? defaultData;
+  const raw = initialData ?? (tripId ? loadTrip(tripId) : null) ?? defaultData;
+  const startData = { ...raw, days: ensureCityIntros(raw.days, raw.cities) };
   const [state, dispatch] = useReducer(itineraryReducer, startData);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
 
@@ -337,8 +392,8 @@ export function useItinerary(tripId?: string, initialData?: ItineraryData) {
   );
 
   const updateDayWeatherLoc = useCallback(
-    (dayIndex: number, lat: number, lng: number) =>
-      dispatch({ type: "UPDATE_DAY_WEATHER_LOC", dayIndex, lat, lng }),
+    (dayIndex: number, lat: number, lng: number, cityName?: string) =>
+      dispatch({ type: "UPDATE_DAY_WEATHER_LOC", dayIndex, lat, lng, cityName }),
     []
   );
 
