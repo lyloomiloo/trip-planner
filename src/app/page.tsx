@@ -287,7 +287,7 @@ export default function Home() {
     const id = cityName.toLowerCase().replace(/[^a-z0-9]+/g, "-");
     const name = cityName.trim();
 
-    // Immediately add placeholder city + first day
+    // Immediately add placeholder city (no day card)
     const placeholderCity = {
       name,
       splitName: [
@@ -303,9 +303,8 @@ export default function Home() {
     };
     addCity(id, placeholderCity);
 
-    // Add first day for this city
+    // Add city-intro entry only
     const lastDay = state.days[state.days.length - 1];
-    const nextNum = lastDay ? lastDay.dayNumber + 1 : 1;
     const nextDate = lastDay
       ? (() => {
           const d = new Date(lastDay.date + "T12:00:00");
@@ -329,26 +328,8 @@ export default function Home() {
       isCityIntro: true,
     });
 
-    // Then add the first day for this city
-    addDay({
-      dayNumber: nextNum,
-      date: nextDate,
-      weekday: nextWeekday,
-      cityId: id,
-      route: "",
-      accommodation: "",
-      events: [],
-      gallery: [
-        { url: null, caption: null, size: "large", slot: "A" },
-        { url: null, caption: null, size: "medium", slot: "B" },
-        { url: null, caption: null, size: "medium", slot: "C" },
-        { url: null, caption: null, size: "small", slot: "D" },
-        { url: null, caption: null, size: "large", slot: "E" },
-      ],
-    });
-
-    // Auto-scroll to the new day after render (skip the city-intro entry)
-    pendingScrollRef.current = state.days.length + 1;
+    // Auto-scroll to the new city intro after render
+    pendingScrollRef.current = state.days.length;
 
     // Geocode city
     try {
