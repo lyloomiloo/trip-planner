@@ -11,10 +11,14 @@ interface OverviewProps {
   onMoveDay: (fromIndex: number, toIndex: number) => void;
   onRemoveDay: (dayIndex: number) => void;
   onRemoveCity?: (cityId: string) => void;
+  onAddDay?: () => void;
+  onAddCity?: (cityName: string) => void;
 }
 
-export default function Overview({ data, onClose, onMoveDay, onRemoveDay, onRemoveCity }: OverviewProps) {
+export default function Overview({ data, onClose, onMoveDay, onRemoveDay, onRemoveCity, onAddDay, onAddCity }: OverviewProps) {
   const [downloading, setDownloading] = useState(false);
+  const [addingCity, setAddingCity] = useState(false);
+  const [cityInput, setCityInput] = useState("");
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
   const [confirmRemove, setConfirmRemove] = useState<number | null>(null);
@@ -278,6 +282,67 @@ export default function Overview({ data, onClose, onMoveDay, onRemoveDay, onRemo
               </div>
             );
           })}
+          {/* Add Day / Add City buttons */}
+          {(onAddDay || onAddCity) && (
+            <div className="flex items-center gap-3 pt-6" data-no-pdf>
+              {onAddDay && (
+                <button
+                  onClick={onAddDay}
+                  className="text-[9px] font-bold uppercase tracking-widest border-2 border-black px-4 py-2 hover:bg-neutral-100"
+                >
+                  + Add Day
+                </button>
+              )}
+              {onAddCity && !addingCity && (
+                <button
+                  onClick={() => setAddingCity(true)}
+                  className="text-[9px] font-bold uppercase tracking-widest bg-black text-white px-4 py-2 hover:bg-neutral-800"
+                >
+                  + Add City
+                </button>
+              )}
+              {onAddCity && addingCity && (
+                <div className="flex items-center gap-2 border-2 border-black px-3 py-1.5">
+                  <input
+                    autoFocus
+                    value={cityInput}
+                    onChange={(e) => setCityInput(e.target.value)}
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter" && cityInput.trim()) {
+                        onAddCity(cityInput.trim());
+                        setCityInput("");
+                        setAddingCity(false);
+                      }
+                      if (e.key === "Escape") {
+                        setCityInput("");
+                        setAddingCity(false);
+                      }
+                    }}
+                    placeholder="City name"
+                    className="bg-transparent text-[9px] font-bold uppercase tracking-widest focus:outline-none w-24 placeholder:text-neutral-300"
+                  />
+                  <button
+                    onClick={() => {
+                      if (cityInput.trim()) {
+                        onAddCity(cityInput.trim());
+                        setCityInput("");
+                        setAddingCity(false);
+                      }
+                    }}
+                    className="text-[9px] font-bold uppercase tracking-widest bg-black text-white px-2 py-0.5 hover:bg-neutral-800"
+                  >
+                    Add
+                  </button>
+                  <button
+                    onClick={() => { setCityInput(""); setAddingCity(false); }}
+                    className="text-neutral-400 hover:text-black text-sm"
+                  >
+                    &times;
+                  </button>
+                </div>
+              )}
+            </div>
+          )}
         </div>
       </div>
     </div>

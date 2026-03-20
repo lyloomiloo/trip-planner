@@ -583,6 +583,8 @@ export default function Home() {
           onMoveDay={moveDay}
           onRemoveDay={removeDay}
           onRemoveCity={removeCity}
+          onAddDay={locked ? undefined : handleAddDay}
+          onAddCity={locked ? undefined : handleAddCityDestination}
         />
       )}
 
