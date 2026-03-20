@@ -136,7 +136,7 @@ export default function Home() {
         entries.push({
           id: `slide-day-${slide.dayIndex}`,
           label: `Day ${day.dayNumber}`,
-          sublabel: day.route || state.cities[day.cityId]?.name || day.cityId,
+          sublabel: day.weatherCityName || state.cities[day.cityId]?.name || day.cityId,
           type: "day",
         });
       }

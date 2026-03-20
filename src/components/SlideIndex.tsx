@@ -115,17 +115,17 @@ export default function SlideIndex({ slides }: SlideIndexProps) {
 
                 {/* Label */}
                 <span
-                  className={`text-[9px] font-bold uppercase tracking-widest transition-colors shrink-0 ${
+                  className={`text-[11px] font-bold uppercase tracking-widest transition-colors shrink-0 ${
                     isActive ? "text-black" : "text-neutral-400 group-hover/idx:text-[#C80815]"
                   }`}
                 >
                   {slide.label}
                 </span>
 
-                {/* Sublabel — truncated */}
+                {/* Sublabel — weather location */}
                 {slide.sublabel && (
-                  <span className={`text-[8px] uppercase tracking-widest ml-auto truncate max-w-[50%] transition-colors ${
-                    isActive ? "text-neutral-300" : "text-neutral-200 group-hover/idx:text-[#C80815]/40"
+                  <span className={`text-[10px] uppercase tracking-widest ml-auto truncate max-w-[55%] transition-colors ${
+                    isActive ? "text-neutral-400" : "text-neutral-300 group-hover/idx:text-[#C80815]/40"
                   }`} title={slide.sublabel}>
                     {slide.sublabel}
                   </span>

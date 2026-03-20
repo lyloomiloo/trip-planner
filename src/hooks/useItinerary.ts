@@ -329,13 +329,33 @@ interface HistoryEntry {
 }
 
 const MAX_HISTORY = 50;
-const HISTORY_DEBOUNCE_MS = 3000; // group rapid changes into one snapshot
+const MAX_PERSISTED_HISTORY = 10; // keep last 10 in localStorage
+const HISTORY_DEBOUNCE_MS = 3000;
+const HISTORY_SAVE_DEBOUNCE_MS = 5000; // debounce localStorage writes
+
+function historyStorageKey(tripId: string) { return `trip-history-${tripId}`; }
+
+function loadPersistedHistory(tripId: string): HistoryEntry[] | null {
+  if (typeof window === "undefined") return null;
+  try {
+    const raw = localStorage.getItem(historyStorageKey(tripId));
+    if (!raw) return null;
+    return JSON.parse(raw) as HistoryEntry[];
+  } catch { return null; }
+}
+
+function savePersistedHistory(tripId: string, history: HistoryEntry[], index: number) {
+  if (typeof window === "undefined") return;
+  try {
+    // Only persist the last N snapshots up to the current index
+    const toSave = history.slice(Math.max(0, index - MAX_PERSISTED_HISTORY + 1), index + 1);
+    localStorage.setItem(historyStorageKey(tripId), JSON.stringify(toSave));
+  } catch { /* localStorage full — silent */ }
+}
 
 export function useItinerary(tripId?: string, initialData?: ItineraryData) {
   // Priority: explicit initialData > localStorage > bundled JSON
   const raw = initialData ?? (tripId ? loadTrip(tripId) : null) ?? defaultData;
-  // Only ensure city intros for the bundled default data (never edited).
-  // Saved/edited data already has user-managed city intros — don't re-insert removed ones.
   const savedData = tripId ? loadTrip(tripId) : null;
   const isUserEdited = !!(savedData || initialData);
   const startData = isUserEdited
@@ -345,12 +365,34 @@ export function useItinerary(tripId?: string, initialData?: ItineraryData) {
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
 
   // ─── Undo / history ───────────────────────────────────
-  const [history, setHistory] = useState<HistoryEntry[]>([
-    { state: startData, timestamp: Date.now(), label: "Initial" },
-  ]);
-  const [historyIndex, setHistoryIndex] = useState(0);
+  // Load persisted history on mount, or start fresh
+  const [history, setHistory] = useState<HistoryEntry[]>(() => {
+    if (tripId) {
+      const persisted = loadPersistedHistory(tripId);
+      if (persisted && persisted.length > 0) return persisted;
+    }
+    return [{ state: startData, timestamp: Date.now(), label: "Initial" }];
+  });
+  const [historyIndex, setHistoryIndex] = useState(() => {
+    if (tripId) {
+      const persisted = loadPersistedHistory(tripId);
+      if (persisted && persisted.length > 0) return persisted.length - 1;
+    }
+    return 0;
+  });
   const lastSnapshotTime = useRef(Date.now());
   const isUndoRedo = useRef(false);
+  const historySaveTimeout = useRef<ReturnType<typeof setTimeout>>();
+
+  // Persist history to localStorage (debounced)
+  useEffect(() => {
+    if (!tripId) return;
+    clearTimeout(historySaveTimeout.current);
+    historySaveTimeout.current = setTimeout(() => {
+      savePersistedHistory(tripId, history, historyIndex);
+    }, HISTORY_SAVE_DEBOUNCE_MS);
+    return () => clearTimeout(historySaveTimeout.current);
+  }, [history, historyIndex, tripId]);
 
   // Snapshot the state whenever it changes (debounced)
   useEffect(() => {
@@ -360,7 +402,6 @@ export function useItinerary(tripId?: string, initialData?: ItineraryData) {
     }
     const now = Date.now();
     if (now - lastSnapshotTime.current < HISTORY_DEBOUNCE_MS) {
-      // Update the current snapshot in-place instead of creating a new one
       setHistory((prev) => {
         const updated = [...prev];
         updated[historyIndex] = { state, timestamp: now, label: "Edit" };
@@ -370,10 +411,8 @@ export function useItinerary(tripId?: string, initialData?: ItineraryData) {
     }
     lastSnapshotTime.current = now;
     setHistory((prev) => {
-      // Trim future entries if we edited after undoing
       const base = prev.slice(0, historyIndex + 1);
       const next = [...base, { state, timestamp: now, label: "Edit" }];
-      // Cap history length
       if (next.length > MAX_HISTORY) next.shift();
       return next;
     });
