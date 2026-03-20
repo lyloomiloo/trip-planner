@@ -238,15 +238,11 @@ export default function DaySlide({
         )}
         <span className="mx-2">/</span>
         {locked ? (
-          <span>{day.weatherCityName || `${city.name}, ${city.country}`}</span>
+          <span>{day.accommodationLocation || `${city.name}, ${city.country}`}</span>
         ) : (
           <EditableText
-            value={day.weatherCityName || `${city.name}, ${city.country}`}
-            onChange={(v) => {
-              if (onUpdateDayWeatherLoc) {
-                onUpdateDayWeatherLoc(dayIndex, day.weatherLat ?? city.lat, day.weatherLng ?? city.lng, v);
-              }
-            }}
+            value={day.accommodationLocation || `${city.name}, ${city.country}`}
+            onChange={(v) => onUpdateDayField(dayIndex, "accommodationLocation", v)}
             placeholder="Location"
           />
         )}

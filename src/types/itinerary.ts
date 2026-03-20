@@ -31,6 +31,7 @@ export interface DayData {
   weatherLat?: number;  // override city lat for weather
   weatherLng?: number;  // override city lng for weather
   weatherCityName?: string;  // override city name for weather display
+  accommodationLocation?: string;  // override location shown at bottom of card
   isCityIntro?: boolean;  // true = this is a city intro slide, not a day
 }
 
