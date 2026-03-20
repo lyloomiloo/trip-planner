@@ -48,19 +48,14 @@ export default function SharePage() {
     load();
   }, [tripId]);
 
-  // Build flat slide list (same logic as main page)
+  // Build flat slide list — read directly from days array (matches main page logic)
   const flatSlides = useMemo(() => {
     if (!trip) return [];
-    const slides: ({ type: "city-intro"; cityId: string } | { type: "day"; dayIndex: number })[] = [];
-    let lastCityId: string | null = null;
-    trip.days.forEach((day, i) => {
-      if (day.cityId !== lastCityId) {
-        slides.push({ type: "city-intro", cityId: day.cityId });
-        lastCityId = day.cityId;
-      }
-      slides.push({ type: "day", dayIndex: i });
-    });
-    return slides;
+    return trip.days.map((day, i) =>
+      day.isCityIntro
+        ? { type: "city-intro" as const, cityId: day.cityId, dayIndex: i }
+        : { type: "day" as const, dayIndex: i }
+    );
   }, [trip]);
 
   // Slide index entries
@@ -69,11 +64,11 @@ export default function SharePage() {
     const entries: { id: string; label: string; sublabel?: string; type: "cover" | "city" | "day" }[] = [
       { id: "slide-cover", label: "Cover", type: "cover" },
     ];
-    flatSlides.forEach((slide, i) => {
+    flatSlides.forEach((slide) => {
       if (slide.type === "city-intro") {
         const city = trip.cities[slide.cityId];
         entries.push({
-          id: `slide-city-${slide.cityId}-${i}`,
+          id: `slide-city-${slide.dayIndex}`,
           label: city?.name ?? slide.cityId,
           type: "city",
         });
@@ -82,7 +77,7 @@ export default function SharePage() {
         entries.push({
           id: `slide-day-${slide.dayIndex}`,
           label: `Day ${day.dayNumber}`,
-          sublabel: day.cityId,
+          sublabel: day.weatherCityName || trip.cities[day.cityId]?.name || day.cityId,
           type: "day",
         });
       }
@@ -165,12 +160,12 @@ export default function SharePage() {
         </div>
 
         {/* City intros + Day slides */}
-        {flatSlides.map((slide, i) => {
+        {flatSlides.map((slide) => {
           if (slide.type === "city-intro") {
             const city = trip.cities[slide.cityId];
             if (!city) return null;
             return (
-              <div key={`city-${slide.cityId}-${i}`} id={`slide-city-${slide.cityId}-${i}`} data-slide>
+              <div key={`city-${slide.cityId}`} id={`slide-city-${slide.dayIndex}`} data-slide>
                 <CityIntroSlide
                   city={city}
                   cityId={slide.cityId}
@@ -181,8 +176,16 @@ export default function SharePage() {
           }
 
           const day = trip.days[slide.dayIndex];
-          const city = trip.cities[day.cityId];
-          if (!city) return null;
+          const city = trip.cities[day.cityId] ?? {
+            name: day.cityId.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()),
+            splitName: ["", ""] as [string, string],
+            country: "",
+            countryLabel: "",
+            lat: 47.0,
+            lng: 8.0,
+            description: "",
+            mapZoom: 13,
+          };
           return (
             <div key={`day-${day.dayNumber}-${slide.dayIndex}`} id={`slide-day-${slide.dayIndex}`} data-slide>
               <DaySlide
