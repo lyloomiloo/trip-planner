@@ -29,14 +29,14 @@ export default function CityIntroSlide({ city, maxCityNameLength, isGenerating, 
   )}&z=${city.mapZoom}&output=embed`;
 
   return (
-    <section className="group/city relative w-full overflow-hidden border-b-2 border-black flex snap-start" style={{ minHeight: "var(--slide-h)", height: "var(--slide-h)" }}>
+    <section className="group/city relative w-full overflow-hidden border-b-2 border-black flex flex-col md:flex-row snap-start" style={{ minHeight: "var(--slide-h)", height: "var(--slide-h)" }}>
       {/* Left panel — city info, scrollable */}
-      <div className="w-[22%] shrink-0 bg-white z-20 border-r-2 border-black overflow-y-auto">
-        <div className="px-6 py-10">
+      <div className="w-full md:w-[22%] shrink-0 bg-white z-20 md:border-r-2 border-b-2 md:border-b-0 border-black overflow-y-auto">
+        <div className="px-4 md:px-6 py-6 md:py-10">
           {/* City name + country — sized to fill column based on longest city name */}
           <h2
             className="font-black uppercase tracking-tight leading-none whitespace-nowrap"
-            style={{ fontSize: `calc((22vw - 48px) * ${1 / (maxCityNameLength * 0.68)})` }}
+            style={{ fontSize: `clamp(1.5rem, calc((22vw - 48px) * ${1 / (maxCityNameLength * 0.68)}), 5rem)` }}
           >
             {city.name}
           </h2>

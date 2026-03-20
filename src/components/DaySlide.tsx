@@ -101,7 +101,7 @@ export default function DaySlide({
                 />
               </span>
             )}
-            <h2 className="text-7xl font-black uppercase tracking-tighter leading-none">
+            <h2 className="text-4xl md:text-7xl font-black uppercase tracking-tighter leading-none">
               DAY {day.dayNumber}
             </h2>
           </div>
@@ -155,10 +155,10 @@ export default function DaySlide({
         </div>
       </div>
 
-      {/* Main content: Gallery (left ~60%) + Schedule (right ~40%) */}
-      <div className="flex gap-10 flex-1 min-h-0">
+      {/* Main content: stacked on mobile, side-by-side on desktop */}
+      <div className="flex flex-col md:flex-row gap-4 md:gap-10 flex-1 min-h-0">
         {/* Image gallery */}
-        <div className="w-[58%] shrink-0 overflow-hidden">
+        <div className="w-full md:w-[58%] shrink-0 overflow-hidden">
           <ImageGallery
             gallery={day.gallery}
             onUpdateSlot={(i, slot) => onUpdateGallerySlot(dayIndex, i, slot)}
@@ -228,8 +228,8 @@ export default function DaySlide({
         </div>
       </div>
 
-      {/* Accommodation footer — pinned to bottom */}
-      <div className="absolute bottom-4 left-12 right-12 group/accom text-sm uppercase tracking-widest text-neutral-400 flex items-center">
+      {/* Accommodation footer — pinned to bottom on desktop, inline on mobile */}
+      <div className="md:absolute md:bottom-4 md:left-12 md:right-12 mt-4 md:mt-0 group/accom text-xs md:text-sm uppercase tracking-widest text-neutral-400 flex items-center flex-wrap">
         {locked ? (
           <span>{day.accommodation || "—"}</span>
         ) : (
