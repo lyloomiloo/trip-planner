@@ -14,7 +14,7 @@
   --slot-empty: #f5f5f5;
   --slot-border: #cccccc;
   --toolbar-h: 42px;
-  --slide-h: auto;
+  --slide-h: 40vh;
 }
 
 /* Desktop: lock slide height to viewport */
