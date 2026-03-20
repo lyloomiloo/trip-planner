@@ -71,7 +71,7 @@ export default function DaySlide({
   const weatherLng = day.weatherLng ?? city.lng;
 
   return (
-    <section className={`group/day relative w-full px-12 pt-10 pb-14 border-b border-neutral-200 overflow-hidden flex flex-col ${dayIndex < totalDays - 1 ? "snap-start" : ""}`} style={{ height: "var(--slide-h)" }}>
+    <section className={`group/day relative w-full px-4 md:px-12 pt-10 pb-14 border-b border-neutral-200 overflow-hidden flex flex-col ${dayIndex < totalDays - 1 ? "snap-start" : ""}`} style={{ minHeight: "var(--slide-h)", height: "var(--slide-h)" }}>
       {/* Top row: Weather (left) + Day header (right) */}
       <div className="flex justify-between items-start mb-2">
         {/* Weather widget — top left */}

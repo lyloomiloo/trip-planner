@@ -80,7 +80,7 @@ export default function CoverSlide({
   return (
     <section
       className="relative w-full overflow-hidden bg-neutral-200 snap-start"
-      style={{ height: "var(--slide-h)", scrollSnapStop: "always" }}
+      style={{ minHeight: "var(--slide-h)", height: "var(--slide-h)", scrollSnapStop: "always" }}
     >
       {/* Map background — Leaflet with OpenStreetMap, pins placed natively */}
       <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>

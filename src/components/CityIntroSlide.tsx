@@ -29,7 +29,7 @@ export default function CityIntroSlide({ city, maxCityNameLength, isGenerating, 
   )}&z=${city.mapZoom}&output=embed`;
 
   return (
-    <section className="group/city relative w-full overflow-hidden border-b-2 border-black flex snap-start" style={{ height: "var(--slide-h)" }}>
+    <section className="group/city relative w-full overflow-hidden border-b-2 border-black flex snap-start" style={{ minHeight: "var(--slide-h)", height: "var(--slide-h)" }}>
       {/* Left panel — city info, scrollable */}
       <div className="w-[22%] shrink-0 bg-white z-20 border-r-2 border-black overflow-y-auto">
         <div className="px-6 py-10">
