@@ -46,7 +46,7 @@ export default function CityIntroSlide({ city, maxCityNameLength, isGenerating, 
 
           <div className="w-6 h-0.5 bg-black mt-4 mb-4" />
 
-          {isGenerating && (
+          {isGenerating && !city.description && !city.language && !city.currency && (
             <div className="mb-4 py-3 px-4 bg-neutral-50 border border-neutral-200">
               <p className="text-[10px] uppercase tracking-widest text-neutral-400 animate-pulse font-bold">
                 Generating city info...
@@ -57,7 +57,7 @@ export default function CityIntroSlide({ city, maxCityNameLength, isGenerating, 
             </div>
           )}
 
-          {!city.description && !isGenerating && (
+          {!city.description && !city.language && !city.currency && !isGenerating && (
             <div className="mb-4 py-3 px-4 bg-amber-50 border border-amber-200">
               <p className="text-[10px] uppercase tracking-widest text-amber-500 font-bold">
                 Waiting to generate
