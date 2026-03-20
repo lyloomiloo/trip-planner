@@ -97,6 +97,9 @@ body {
 }
 
 /* Print styles for PDF export */
+.scrollbar-hide { -ms-overflow-style: none; scrollbar-width: none; }
+.scrollbar-hide::-webkit-scrollbar { display: none; }
+
 @media print {
   html { scroll-snap-type: none !important; }
   body { -webkit-print-color-adjust: exact; print-color-adjust: exact; }

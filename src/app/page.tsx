@@ -8,6 +8,7 @@ import { generateCityDetails, queuePendingCity, removePendingCity, getPendingCit
 import LandingPage from "@/components/LandingPage";
 import NewTripForm from "@/components/NewTripForm";
 import type { NewTripData } from "@/components/NewTripForm";
+import AITripWizard from "@/components/AITripWizard";
 import CoverSlide from "@/components/CoverSlide";
 import CityIntroSlide from "@/components/CityIntroSlide";
 import DaySlide from "@/components/DaySlide";
@@ -22,7 +23,7 @@ import type { ItineraryData } from "@/types/itinerary";
 const DEFAULT_TRIP_ID = "europe-alps-tour";
 
 export default function Home() {
-  const [view, setView] = useState<"landing" | "new" | "trip">("landing");
+  const [view, setView] = useState<"landing" | "new" | "manual" | "ai-generate" | "trip">("landing");
   const [showOverview, setShowOverview] = useState(false);
   const [activeTripId, setActiveTripId] = useState<string>(DEFAULT_TRIP_ID);
   const [initialData, setInitialData] = useState<ItineraryData | undefined>(undefined);
@@ -54,6 +55,9 @@ export default function Home() {
     loadData,
     importJSON,
     reset,
+    addComment,
+    updateComment,
+    removeComment,
   } = useItinerary(activeTripId, initialData);
 
   // Passphrase modal state
@@ -460,13 +464,105 @@ export default function Home() {
     );
   }
 
-  // New trip form
+  // New trip — chooser screen
   if (view === "new") {
     return (
+      <div className="relative h-screen w-full overflow-hidden bg-white">
+        <button
+          onClick={() => setView("landing")}
+          className="absolute top-8 left-8 z-10 text-xs font-bold uppercase tracking-widest text-black/40 hover:text-black"
+        >
+          &larr; Back
+        </button>
+        <div className="h-full flex flex-col items-center justify-center gap-8">
+          <h1 className="text-[6vw] font-black uppercase tracking-tighter leading-none text-black mb-4">
+            NEW TRIP
+          </h1>
+          <div className="flex gap-5">
+            <button
+              onClick={() => setView("ai-generate")}
+              className="bg-black text-white text-sm font-bold uppercase tracking-widest px-10 py-3.5 hover:bg-neutral-800 w-72 border-2 border-black"
+            >
+              ✨ Generate with AI
+            </button>
+            <button
+              onClick={() => setView("manual")}
+              className="bg-white text-black text-sm font-bold uppercase tracking-widest px-10 py-3.5 hover:bg-neutral-100 w-72 border-2 border-black"
+            >
+              ✏️ Manual Input
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  // Manual trip form
+  if (view === "manual") {
+    return (
       <NewTripForm
-        onBack={() => setView("landing")}
+        onBack={() => setView("new")}
         onCreateBlank={handleCreateBlank}
         onImport={handleImportAsNewTrip}
+      />
+    );
+  }
+
+  // AI itinerary generator wizard
+  if (view === "ai-generate") {
+    return (
+      <AITripWizard
+        onBack={() => setView("new")}
+        onComplete={async (data, title, startDate) => {
+          const tripId = generateTripId(title);
+          saveTrip(tripId, data);
+          setActiveTripId(tripId);
+          setInitialData(data);
+          loadData(data);
+          setView("trip");
+
+          if (isSupabaseEnabled()) {
+            setTimeout(() => setShowPassphraseModal(true), 500);
+          }
+
+          // Gemini city detail generation for each city
+          for (const [cityId, city] of Object.entries(data.cities)) {
+            setGeneratingCityId(cityId);
+
+            // Geocode
+            try {
+              const res = await fetch(
+                `https://nominatim.openstreetmap.org/search?q=${encodeURIComponent(city.name)}&format=json&limit=1`
+              );
+              const results = await res.json();
+              if (results?.[0]) {
+                updateCity(cityId, {
+                  lat: parseFloat(results[0].lat),
+                  lng: parseFloat(results[0].lon),
+                });
+              }
+            } catch { /* silent */ }
+
+            // Gemini enrichment
+            const result = await generateCityDetails(city.name);
+            if (result.status === "ok") {
+              updateCity(cityId, result.data);
+              removePendingCity(cityId);
+            } else if (result.status === "rate-limited") {
+              queuePendingCity(cityId, city.name);
+              // Queue remaining cities
+              const cityEntries = Object.entries(data.cities);
+              const currentIdx = cityEntries.findIndex(([id]) => id === cityId);
+              for (let i = currentIdx + 1; i < cityEntries.length; i++) {
+                queuePendingCity(cityEntries[i][0], cityEntries[i][1].name);
+              }
+              showToast("Rate limited — remaining cities will auto-generate in ~60 seconds");
+              setGeneratingCityId(null);
+              break;
+            }
+            setGeneratingCityId(null);
+          }
+        }}
       />
     );
   }
@@ -552,6 +648,12 @@ export default function Home() {
                   }
                   setGeneratingCityId(null);
                 }}
+                onUpdateCity={(updates) => updateCity(slide.cityId, updates)}
+                locked={locked}
+                comments={state.comments || []}
+                onAddComment={addComment}
+                onUpdateComment={updateComment}
+                onRemoveComment={removeComment}
               />
             </div>
           );
@@ -579,6 +681,10 @@ export default function Home() {
               onUpdateDayWeatherLoc={updateDayWeatherLoc}
               onRemoveDay={removeDay}
               locked={locked}
+              comments={state.comments || []}
+              onAddComment={addComment}
+              onUpdateComment={updateComment}
+              onRemoveComment={removeComment}
             />
           </div>
         );

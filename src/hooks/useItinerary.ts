@@ -7,6 +7,7 @@ import type {
   CityData,
   ScheduleEvent,
   GallerySlot,
+  Comment,
 } from "@/types/itinerary";
 import { saveTrip, loadTrip, getTripPassphrase, deriveMeta } from "@/lib/tripStore";
 import { isSupabaseEnabled, syncTripToRemote } from "@/lib/supabaseSync";
@@ -33,6 +34,9 @@ type Action =
   | { type: "ADD_CITY"; cityId: string; city: CityData }
   | { type: "UPDATE_CITY"; cityId: string; updates: Partial<CityData> }
   | { type: "REMOVE_CITY"; cityId: string }
+  | { type: "ADD_COMMENT"; comment: Comment }
+  | { type: "UPDATE_COMMENT"; commentId: string; text: string }
+  | { type: "REMOVE_COMMENT"; commentId: string }
   | { type: "LOAD_DATA"; data: ItineraryData }
   | { type: "RESET" };
 
@@ -273,6 +277,24 @@ function itineraryReducer(state: ItineraryData, action: Action): ItineraryData {
       return { ...state, cities: rest };
     }
 
+    case "ADD_COMMENT": {
+      return { ...state, comments: [...(state.comments || []), action.comment] };
+    }
+    case "UPDATE_COMMENT": {
+      return {
+        ...state,
+        comments: (state.comments || []).map((c) =>
+          c.id === action.commentId ? { ...c, text: action.text } : c
+        ),
+      };
+    }
+    case "REMOVE_COMMENT": {
+      return {
+        ...state,
+        comments: (state.comments || []).filter((c) => c.id !== action.commentId),
+      };
+    }
+
     case "LOAD_DATA": {
       return {
         ...action.data,
@@ -444,8 +466,22 @@ export function useItinerary(tripId?: string, initialData?: ItineraryData) {
 
   const reset = useCallback(() => dispatch({ type: "RESET" }), []);
 
+  const addComment = useCallback(
+    (comment: Comment) => dispatch({ type: "ADD_COMMENT", comment }),
+    []
+  );
+  const updateComment = useCallback(
+    (commentId: string, text: string) => dispatch({ type: "UPDATE_COMMENT", commentId, text }),
+    []
+  );
+  const removeComment = useCallback(
+    (commentId: string) => dispatch({ type: "REMOVE_COMMENT", commentId }),
+    []
+  );
+
   const exportJSON = useCallback(() => {
-    const blob = new Blob([JSON.stringify(state, null, 2)], {
+    const { comments: _, ...exportData } = state;
+    const blob = new Blob([JSON.stringify(exportData, null, 2)], {
       type: "application/json",
     });
     const url = URL.createObjectURL(blob);
@@ -498,5 +534,8 @@ export function useItinerary(tripId?: string, initialData?: ItineraryData) {
     reset,
     exportJSON,
     importJSON,
+    addComment,
+    updateComment,
+    removeComment,
   };
 }

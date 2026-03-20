@@ -15,6 +15,8 @@ export interface ScheduleEvent {
   type: "transport" | "food" | "activity" | "accommodation" | "rest" | "split";
   highlight?: boolean;
   group?: "A" | "B";  // for split-group events
+  textColor?: string;       // user-chosen text color (hex), overrides TYPE_COLORS
+  highlightColor?: string;  // user-chosen cell background color (hex)
 }
 
 export interface DayData {
@@ -48,12 +50,24 @@ export interface CityData {
   tips?: string[];
 }
 
+export interface Comment {
+  id: string;
+  text: string;
+  createdAt: number;
+  targetType: "day" | "event" | "gallery" | "city";
+  targetDayIndex?: number;
+  targetEventIndex?: number;
+  targetSlotIndex?: number;
+  targetCityId?: string;
+}
+
 export interface ItineraryData {
   tripTitle: string[];  // ["EUROPE", "ALPS", "TOUR", "2026"]
   travellers: number;
   origin: string;
   cities: Record<string, CityData>;
   days: DayData[];
+  comments?: Comment[];
 }
 
 // Weather data from Open-Meteo

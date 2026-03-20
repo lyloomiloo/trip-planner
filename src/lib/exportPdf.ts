@@ -64,6 +64,10 @@ export async function exportSlidesToPdf(
   const pageW = pdf.internal.pageSize.getWidth();
   const pageH = pdf.internal.pageSize.getHeight();
 
+  // Hide interactive-only elements (comments, edit controls) before capture
+  const allNoPdfEls = Array.from(document.querySelectorAll<HTMLElement>("[data-no-pdf]"));
+  allNoPdfEls.forEach((e) => (e.style.display = "none"));
+
   for (let i = 0; i < slides.length; i++) {
     const slide = slides[i];
 
@@ -99,6 +103,9 @@ export async function exportSlidesToPdf(
     if (i > 0) pdf.addPage();
     pdf.addImage(imgData, "JPEG", x, y, w, h);
   }
+
+  // Restore hidden elements
+  allNoPdfEls.forEach((e) => (e.style.display = ""));
 
   pdf.save(filename);
 }

@@ -1,8 +1,10 @@
 "use client";
 
-import { useRef } from "react";
-import type { ScheduleEvent } from "@/types/itinerary";
+import { useRef, useState } from "react";
+import type { ScheduleEvent, Comment } from "@/types/itinerary";
 import EditableText from "./EditableText";
+import ColorPicker from "./ColorPicker";
+import CommentBubble from "./CommentBubble";
 
 const TYPE_COLORS: Record<ScheduleEvent["type"], string> = {
   transport: "text-[#C80815]",
@@ -22,6 +24,11 @@ interface ScheduleProps {
   onAddSplitEvent?: () => void;
   onAddMergeEvent?: () => void;
   locked?: boolean;
+  dayIndex?: number;
+  comments?: Comment[];
+  onAddComment?: (comment: Comment) => void;
+  onUpdateComment?: (commentId: string, text: string) => void;
+  onRemoveComment?: (commentId: string) => void;
 }
 
 export default function Schedule({
@@ -33,9 +40,15 @@ export default function Schedule({
   onAddSplitEvent,
   onAddMergeEvent,
   locked,
+  dayIndex,
+  comments = [],
+  onAddComment,
+  onUpdateComment,
+  onRemoveComment,
 }: ScheduleProps) {
   const dragItem = useRef<number | null>(null);
   const dragOverItem = useRef<number | null>(null);
+  const [colorPickerIdx, setColorPickerIdx] = useState<number | null>(null);
 
   const handleDragStart = (index: number) => { dragItem.current = index; };
   const handleDragEnter = (index: number) => { dragOverItem.current = index; };
@@ -77,14 +90,18 @@ export default function Schedule({
   const renderFullEvent = (event: ScheduleEvent, globalIndex: number) => {
     const colorClass = TYPE_COLORS[event.type] || "";
     const isTransport = event.type === "transport";
+    const textStyle = event.textColor ? { color: event.textColor } : undefined;
+    const bgStyle = event.highlightColor ? { backgroundColor: event.highlightColor } : undefined;
+    const highlightClass = !event.highlightColor && event.highlight ? "event-highlight" : "";
+    const appliedColorClass = event.textColor ? "" : (isTransport ? colorClass : "");
 
     if (locked) {
       return (
-        <div key={globalIndex} className={`flex items-start gap-4 py-2 ${event.highlight ? "event-highlight" : ""}`}>
-          <div className={`font-bold text-base tabular-nums shrink-0 w-24 text-right ${isTransport ? colorClass : ""}`}>
+        <div key={globalIndex} className={`flex items-start gap-4 py-2 ${highlightClass}`} style={{ ...bgStyle, borderRadius: bgStyle ? "4px" : undefined, padding: bgStyle ? "4px 8px" : undefined }}>
+          <div className={`font-bold text-base tabular-nums shrink-0 w-24 text-right ${appliedColorClass}`} style={textStyle}>
             {event.time}
           </div>
-          <div className={`flex-1 text-base text-right ${isTransport ? colorClass : ""}`}>
+          <div className={`flex-1 text-base text-right ${appliedColorClass}`} style={textStyle}>
             {event.title}
           </div>
         </div>
@@ -99,18 +116,52 @@ export default function Schedule({
         onDragEnter={() => handleDragEnter(globalIndex)}
         onDragEnd={handleDragEnd}
         onDragOver={(e) => e.preventDefault()}
-        className={`group/evt flex items-start gap-4 py-2 ${event.highlight ? "event-highlight" : ""}`}
+        className={`group/evt flex items-start gap-4 py-2 relative ${highlightClass}`}
+        style={{ ...bgStyle, borderRadius: bgStyle ? "4px" : undefined, padding: bgStyle ? "4px 8px" : undefined }}
       >
-        <span className="opacity-0 group-hover/evt:opacity-30 cursor-grab text-sm mt-1 select-none shrink-0">
-          &#x2801;&#x2801;
-        </span>
-        <div className={`font-bold text-base tabular-nums shrink-0 w-24 text-right ${isTransport ? colorClass : ""}`}>
-          <EditableText value={event.time} onChange={(v) => onUpdateEvent(globalIndex, { time: v })} className={isTransport ? colorClass : ""} placeholder="--:--" />
+        {/* Left-side controls: drag, color, comment */}
+        <div className="opacity-0 group-hover/evt:opacity-100 transition-opacity shrink-0 flex items-center gap-1 mt-1">
+          <span className="opacity-30 cursor-grab text-sm select-none">&#x2801;&#x2801;</span>
+          <button
+            onClick={() => setColorPickerIdx(colorPickerIdx === globalIndex ? null : globalIndex)}
+            className="opacity-30 hover:!opacity-100 text-[11px]"
+            title="Change colors"
+          >
+            🎨
+          </button>
+          {onAddComment && onUpdateComment && onRemoveComment && dayIndex !== undefined && (
+            <span className="opacity-40 hover:!opacity-100">
+              <CommentBubble
+                comments={comments}
+                targetType="event"
+                targetDayIndex={dayIndex}
+                targetEventIndex={globalIndex}
+                onAdd={onAddComment}
+                onUpdate={onUpdateComment}
+                onRemove={onRemoveComment}
+                locked={locked}
+                position="left"
+              />
+            </span>
+          )}
         </div>
-        <div className={`flex-1 text-base text-right ${isTransport ? colorClass : ""}`}>
-          <EditableText value={event.title} onChange={(v) => onUpdateEvent(globalIndex, { title: v })} className={isTransport ? colorClass : ""} placeholder="Event name" />
+        <div className={`font-bold text-base tabular-nums shrink-0 w-24 text-right ${appliedColorClass}`} style={textStyle}>
+          <EditableText value={event.time} onChange={(v) => onUpdateEvent(globalIndex, { time: v })} className={appliedColorClass} placeholder="--:--" />
         </div>
+        <div className={`flex-1 text-base text-right ${appliedColorClass}`} style={textStyle}>
+          <EditableText value={event.title} onChange={(v) => onUpdateEvent(globalIndex, { title: v })} className={appliedColorClass} placeholder="Event name" />
+        </div>
+        {/* Delete on right */}
         <button onClick={() => onRemoveEvent(globalIndex)} className="opacity-0 group-hover/evt:opacity-40 hover:!opacity-100 text-sm text-red-500 shrink-0 mt-0.5">&times;</button>
+        {colorPickerIdx === globalIndex && (
+          <ColorPicker
+            textColor={event.textColor}
+            highlightColor={event.highlightColor}
+            onChangeTextColor={(c) => onUpdateEvent(globalIndex, { textColor: c })}
+            onChangeHighlightColor={(c) => onUpdateEvent(globalIndex, { highlightColor: c })}
+            onClose={() => setColorPickerIdx(null)}
+          />
+        )}
       </div>
     );
   };
@@ -118,14 +169,18 @@ export default function Schedule({
   const renderCompactEvent = (event: ScheduleEvent, globalIndex: number) => {
     const colorClass = TYPE_COLORS[event.type] || "";
     const isTransport = event.type === "transport";
+    const textStyle = event.textColor ? { color: event.textColor } : undefined;
+    const bgStyle = event.highlightColor ? { backgroundColor: event.highlightColor } : undefined;
+    const highlightClass = !event.highlightColor && event.highlight ? "event-highlight" : "";
+    const appliedColorClass = event.textColor ? "" : (isTransport ? colorClass : "");
 
     if (locked) {
       return (
-        <div key={globalIndex} className={`flex items-start gap-3 py-2 ${event.highlight ? "event-highlight" : ""}`}>
-          <div className={`font-bold text-sm tabular-nums shrink-0 w-[4.5rem] text-right ${isTransport ? colorClass : ""}`}>
+        <div key={globalIndex} className={`flex items-start gap-3 py-2 ${highlightClass}`} style={{ ...bgStyle, borderRadius: bgStyle ? "4px" : undefined, padding: bgStyle ? "4px 6px" : undefined }}>
+          <div className={`font-bold text-sm tabular-nums shrink-0 w-[4.5rem] text-right ${appliedColorClass}`} style={textStyle}>
             {event.time || "--:--"}
           </div>
-          <div className={`flex-1 text-sm text-right ${isTransport ? colorClass : ""}`}>
+          <div className={`flex-1 text-sm text-right ${appliedColorClass}`} style={textStyle}>
             {event.title}
           </div>
         </div>
@@ -133,14 +188,34 @@ export default function Schedule({
     }
 
     return (
-      <div key={globalIndex} className={`group/evt flex items-start gap-3 py-2 ${event.highlight ? "event-highlight" : ""}`}>
-        <div className={`font-bold text-sm tabular-nums shrink-0 w-[4.5rem] text-right ${isTransport ? colorClass : ""}`}>
-          <EditableText value={event.time} onChange={(v) => onUpdateEvent(globalIndex, { time: v })} className={isTransport ? colorClass : ""} placeholder="--:--" />
+      <div key={globalIndex} className={`group/evt flex items-start gap-3 py-2 relative ${highlightClass}`} style={{ ...bgStyle, borderRadius: bgStyle ? "4px" : undefined, padding: bgStyle ? "4px 6px" : undefined }}>
+        {/* Left-side controls: color only */}
+        <div className="opacity-0 group-hover/evt:opacity-100 transition-opacity shrink-0 flex items-center gap-0.5">
+          <button
+            onClick={() => setColorPickerIdx(colorPickerIdx === globalIndex ? null : globalIndex)}
+            className="opacity-30 hover:!opacity-100 text-[10px]"
+            title="Change colors"
+          >
+            🎨
+          </button>
         </div>
-        <div className={`flex-1 text-sm text-right ${isTransport ? colorClass : ""}`}>
-          <EditableText value={event.title} onChange={(v) => onUpdateEvent(globalIndex, { title: v })} className={isTransport ? colorClass : ""} />
+        <div className={`font-bold text-sm tabular-nums shrink-0 w-[4.5rem] text-right ${appliedColorClass}`} style={textStyle}>
+          <EditableText value={event.time} onChange={(v) => onUpdateEvent(globalIndex, { time: v })} className={appliedColorClass} placeholder="--:--" />
         </div>
+        <div className={`flex-1 text-sm text-right ${appliedColorClass}`} style={textStyle}>
+          <EditableText value={event.title} onChange={(v) => onUpdateEvent(globalIndex, { title: v })} className={appliedColorClass} />
+        </div>
+        {/* Delete on right */}
         <button onClick={() => onRemoveEvent(globalIndex)} className="opacity-0 group-hover/evt:opacity-40 hover:!opacity-100 text-sm text-red-500 shrink-0">&times;</button>
+        {colorPickerIdx === globalIndex && (
+          <ColorPicker
+            textColor={event.textColor}
+            highlightColor={event.highlightColor}
+            onChangeTextColor={(c) => onUpdateEvent(globalIndex, { textColor: c })}
+            onChangeHighlightColor={(c) => onUpdateEvent(globalIndex, { highlightColor: c })}
+            onClose={() => setColorPickerIdx(null)}
+          />
+        )}
       </div>
     );
   };

@@ -1,11 +1,12 @@
 "use client";
 
 import { useState, useEffect } from "react";
-import type { DayData, CityData, ScheduleEvent, GallerySlot as GallerySlotType } from "@/types/itinerary";
+import type { DayData, CityData, ScheduleEvent, GallerySlot as GallerySlotType, Comment } from "@/types/itinerary";
 import WeatherWidget from "./WeatherWidget";
 import ImageGallery from "./ImageGallery";
 import Schedule from "./Schedule";
 import EditableText from "./EditableText";
+import CommentBubble from "./CommentBubble";
 
 interface DaySlideProps {
   day: DayData;
@@ -24,6 +25,10 @@ interface DaySlideProps {
   onUpdateDayWeatherLoc?: (dayIndex: number, lat: number, lng: number, cityName?: string) => void;
   onRemoveDay: (dayIndex: number) => void;
   locked?: boolean;
+  comments?: Comment[];
+  onAddComment?: (comment: Comment) => void;
+  onUpdateComment?: (commentId: string, text: string) => void;
+  onRemoveComment?: (commentId: string) => void;
 }
 
 export default function DaySlide({
@@ -43,6 +48,10 @@ export default function DaySlide({
   onUpdateDayWeatherLoc,
   onRemoveDay,
   locked,
+  comments = [],
+  onAddComment,
+  onUpdateComment,
+  onRemoveComment,
 }: DaySlideProps) {
   const [confirmingRemove, setConfirmingRemove] = useState(false);
   const [editingDate, setEditingDate] = useState(false);
@@ -77,9 +86,25 @@ export default function DaySlide({
 
         {/* Day header — top right */}
         <div className="text-right">
-          <h2 className="text-7xl font-black uppercase tracking-tighter leading-none">
-            DAY {day.dayNumber}
-          </h2>
+          <div className="flex items-start justify-end gap-2">
+            {onAddComment && onUpdateComment && onRemoveComment && (
+              <span className="mt-2">
+                <CommentBubble
+                  comments={comments}
+                  targetType="day"
+                  targetDayIndex={dayIndex}
+                  onAdd={onAddComment}
+                  onUpdate={onUpdateComment}
+                  onRemove={onRemoveComment}
+                  locked={locked}
+                  position="left"
+                />
+              </span>
+            )}
+            <h2 className="text-7xl font-black uppercase tracking-tighter leading-none">
+              DAY {day.dayNumber}
+            </h2>
+          </div>
           {/* Date display / editable */}
           {!editingDate || locked ? (
             <p
@@ -191,6 +216,11 @@ export default function DaySlide({
               })
             }
             locked={locked}
+            dayIndex={dayIndex}
+            comments={comments}
+            onAddComment={onAddComment}
+            onUpdateComment={onUpdateComment}
+            onRemoveComment={onRemoveComment}
           />
         </div>
       </div>

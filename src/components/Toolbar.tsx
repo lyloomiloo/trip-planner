@@ -14,6 +14,7 @@ interface ToolbarProps {
   onToggleLock: () => void;
   syncStatus?: SyncStatus;
   onPublish?: () => void; // publish to cloud (set passphrase)
+  onExportPdf?: () => void;
 }
 
 export default function Toolbar({
@@ -26,6 +27,7 @@ export default function Toolbar({
   onToggleLock,
   syncStatus,
   onPublish,
+  onExportPdf,
 }: ToolbarProps) {
   const [showCityInput, setShowCityInput] = useState(false);
   const [cityInput, setCityInput] = useState("");

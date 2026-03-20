@@ -1,7 +1,10 @@
 "use client";
 
 import { useState } from "react";
-import type { CityData } from "@/types/itinerary";
+import type { CityData, Comment } from "@/types/itinerary";
+import EditableText from "./EditableText";
+import EditableTextarea from "./EditableTextarea";
+import CommentBubble from "./CommentBubble";
 
 interface CityIntroSlideProps {
   city: CityData;
@@ -10,9 +13,16 @@ interface CityIntroSlideProps {
   cityId?: string;
   onRemove?: () => void;
   onRetryGenerate?: () => void;
+  onUpdateCity?: (updates: Partial<CityData>) => void;
+  locked?: boolean;
+  comments?: Comment[];
+  onAddComment?: (comment: Comment) => void;
+  onUpdateComment?: (commentId: string, text: string) => void;
+  onRemoveComment?: (commentId: string) => void;
 }
 
-export default function CityIntroSlide({ city, maxCityNameLength, isGenerating, onRemove, onRetryGenerate }: CityIntroSlideProps) {
+export default function CityIntroSlide({ city, maxCityNameLength, isGenerating, onRemove, onRetryGenerate, onUpdateCity, locked, comments = [], onAddComment, onUpdateComment, onRemoveComment }: CityIntroSlideProps) {
+  const canEdit = !locked && !!onUpdateCity;
   const [confirmingRemove, setConfirmingRemove] = useState(false);
   const fallbackSrc = `https://maps.google.com/maps?q=${encodeURIComponent(
     city.name + ", " + city.country
@@ -69,65 +79,161 @@ export default function CityIntroSlide({ city, maxCityNameLength, isGenerating, 
             </div>
           )}
 
-          {city.description && (
-            <p className="text-xs leading-relaxed text-neutral-600">
-              {city.description}
-            </p>
+          {(city.description || canEdit) && (
+            canEdit ? (
+              <EditableTextarea
+                value={city.description}
+                onChange={(v) => onUpdateCity({ description: v })}
+                className="text-xs leading-relaxed text-neutral-600"
+                placeholder="City description..."
+              />
+            ) : (
+              <p className="text-xs leading-relaxed text-neutral-600">
+                {city.description}
+              </p>
+            )
           )}
 
           {/* Language & Currency */}
-          {(city.language || city.currency) && (
+          {(city.language || city.currency || canEdit) && (
             <div className="mt-5 space-y-2">
-              {city.language && (
-                <div>
-                  <p className="retro-label inline-block !text-[9px] !p-0 !bg-transparent">Language</p>
-                  <p className="text-xs text-neutral-700">{city.language}</p>
-                </div>
-              )}
-              {city.currency && (
-                <div>
-                  <p className="retro-label inline-block !text-[9px] !p-0 !bg-transparent">Currency</p>
-                  <p className="text-xs text-neutral-700">{city.currency}</p>
-                </div>
-              )}
+              <div>
+                <p className="retro-label inline-block !text-[9px] !p-0 !bg-transparent">Language</p>
+                {canEdit ? (
+                  <EditableText
+                    value={city.language || ""}
+                    onChange={(v) => onUpdateCity!({ language: v })}
+                    className="text-xs text-neutral-700 mt-1 block"
+                    placeholder="Add language..."
+                  />
+                ) : city.language ? (
+                  <p className="text-xs text-neutral-700 mt-1">{city.language}</p>
+                ) : null}
+              </div>
+              <div>
+                <p className="retro-label inline-block !text-[9px] !p-0 !bg-transparent">Currency</p>
+                {canEdit ? (
+                  <EditableText
+                    value={city.currency || ""}
+                    onChange={(v) => onUpdateCity!({ currency: v })}
+                    className="text-xs text-neutral-700 mt-1 block"
+                    placeholder="Add currency..."
+                  />
+                ) : city.currency ? (
+                  <p className="text-xs text-neutral-700 mt-1">{city.currency}</p>
+                ) : null}
+              </div>
             </div>
           )}
 
           {/* Transport */}
-          {city.transport && (
+          {(city.transport || canEdit) && (
             <div className="mt-5">
               <p className="text-[9px] uppercase tracking-[0.15em] text-neutral-400 font-bold">Getting around</p>
-              <p className="text-xs leading-relaxed text-neutral-700 mt-1">{city.transport}</p>
+              {canEdit ? (
+                <EditableTextarea
+                  value={city.transport || ""}
+                  onChange={(v) => onUpdateCity!({ transport: v })}
+                  className="text-xs leading-relaxed text-neutral-700 mt-1"
+                  placeholder="Add transport info..."
+                />
+              ) : (
+                <p className="text-xs leading-relaxed text-neutral-700 mt-1">{city.transport}</p>
+              )}
             </div>
           )}
 
           {/* Must try food */}
-          {city.mustTry && city.mustTry.length > 0 && (
+          {((city.mustTry && city.mustTry.length > 0) || canEdit) && (
             <div className="mt-5">
               <p className="text-[9px] uppercase tracking-[0.15em] text-neutral-400 font-bold">Must try</p>
               <ul className="mt-1 space-y-1">
-                {city.mustTry.map((item, i) => (
+                {(city.mustTry || []).map((item, i) => (
                   <li key={i} className="text-xs text-neutral-700 flex gap-1.5">
                     <span className="text-neutral-300 shrink-0">-</span>
-                    {item}
+                    {canEdit ? (
+                      <div className="flex-1 flex items-center gap-1">
+                        <EditableText
+                          value={item}
+                          onChange={(v) => {
+                            const updated = [...(city.mustTry || [])];
+                            updated[i] = v;
+                            onUpdateCity!({ mustTry: updated });
+                          }}
+                          className="text-xs text-neutral-700"
+                          placeholder="Item..."
+                        />
+                        <button
+                          onClick={() => {
+                            const updated = (city.mustTry || []).filter((_, j) => j !== i);
+                            onUpdateCity!({ mustTry: updated });
+                          }}
+                          className="text-neutral-300 hover:text-red-500 text-[10px] shrink-0"
+                        >
+                          &times;
+                        </button>
+                      </div>
+                    ) : (
+                      item
+                    )}
                   </li>
                 ))}
               </ul>
+              {canEdit && (
+                <button
+                  onClick={() => onUpdateCity!({ mustTry: [...(city.mustTry || []), ""] })}
+                  className="text-[9px] text-neutral-300 hover:text-neutral-500 mt-1 font-bold uppercase tracking-widest"
+                >
+                  + Add item
+                </button>
+              )}
             </div>
           )}
 
           {/* Tips */}
-          {city.tips && city.tips.length > 0 && (
+          {((city.tips && city.tips.length > 0) || canEdit) && (
             <div className="mt-5">
               <p className="text-[9px] uppercase tracking-[0.15em] text-neutral-400 font-bold">Tips</p>
               <ul className="mt-1 space-y-1">
-                {city.tips.map((tip, i) => (
+                {(city.tips || []).map((tip, i) => (
                   <li key={i} className="text-xs text-neutral-600 leading-relaxed flex gap-1.5">
                     <span className="text-neutral-300 shrink-0">-</span>
-                    {tip}
+                    {canEdit ? (
+                      <div className="flex-1 flex items-center gap-1">
+                        <EditableText
+                          value={tip}
+                          onChange={(v) => {
+                            const updated = [...(city.tips || [])];
+                            updated[i] = v;
+                            onUpdateCity!({ tips: updated });
+                          }}
+                          className="text-xs text-neutral-600"
+                          placeholder="Tip..."
+                        />
+                        <button
+                          onClick={() => {
+                            const updated = (city.tips || []).filter((_, j) => j !== i);
+                            onUpdateCity!({ tips: updated });
+                          }}
+                          className="text-neutral-300 hover:text-red-500 text-[10px] shrink-0"
+                        >
+                          &times;
+                        </button>
+                      </div>
+                    ) : (
+                      tip
+                    )}
                   </li>
                 ))}
               </ul>
+              {canEdit && (
+                <button
+                  onClick={() => onUpdateCity!({ tips: [...(city.tips || []), ""] })}
+                  className="text-[9px] text-neutral-300 hover:text-neutral-500 mt-1 font-bold uppercase tracking-widest"
+                >
+                  + Add tip
+                </button>
+              )}
             </div>
           )}
         </div>
