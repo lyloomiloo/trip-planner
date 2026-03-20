@@ -626,8 +626,8 @@ export default function Home() {
                 maxCityNameLength={maxCityNameLength}
                 isGenerating={generatingCityId === slide.cityId}
                 onRemove={() => {
-                  // Only removes the city card + intro slide — day cards are untouched
-                  removeCity(slide.cityId);
+                  // Remove this specific city-intro slide by index — day cards untouched
+                  removeDay(slide.dayIndex);
                 }}
                 onRetryGenerate={async () => {
                   setGeneratingCityId(slide.cityId);

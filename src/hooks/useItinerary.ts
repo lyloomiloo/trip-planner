@@ -275,11 +275,8 @@ function itineraryReducer(state: ItineraryData, action: Action): ItineraryData {
 
     case "REMOVE_CITY": {
       const { [action.cityId]: _, ...rest } = state.cities;
-      // Only remove the city-intro slide — leave day cards untouched
-      const filteredDays = state.days.filter(
-        (d) => !(d.isCityIntro && d.cityId === action.cityId)
-      );
-      return { ...state, cities: rest, days: filteredDays };
+      // Only remove city from the dict — city-intro slides are removed via REMOVE_DAY
+      return { ...state, cities: rest };
     }
 
     case "ADD_COMMENT": {
@@ -303,7 +300,7 @@ function itineraryReducer(state: ItineraryData, action: Action): ItineraryData {
     case "LOAD_DATA": {
       return {
         ...action.data,
-        days: ensureCityIntros(action.data.days, action.data.cities),
+        days: renumberDays(action.data.days),
       };
     }
 
@@ -337,7 +334,13 @@ const HISTORY_DEBOUNCE_MS = 3000; // group rapid changes into one snapshot
 export function useItinerary(tripId?: string, initialData?: ItineraryData) {
   // Priority: explicit initialData > localStorage > bundled JSON
   const raw = initialData ?? (tripId ? loadTrip(tripId) : null) ?? defaultData;
-  const startData = { ...raw, days: ensureCityIntros(raw.days, raw.cities) };
+  // Only ensure city intros for the bundled default data (never edited).
+  // Saved/edited data already has user-managed city intros — don't re-insert removed ones.
+  const savedData = tripId ? loadTrip(tripId) : null;
+  const isUserEdited = !!(savedData || initialData);
+  const startData = isUserEdited
+    ? { ...raw, days: renumberDays(raw.days) }
+    : { ...raw, days: ensureCityIntros(raw.days, raw.cities) };
   const [state, dispatch] = useReducer(itineraryReducer, startData);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
 

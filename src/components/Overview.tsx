@@ -134,11 +134,8 @@ export default function Overview({ data, onClose, onMoveDay, onRemoveDay, onRemo
                       <button
                         onClick={(e) => {
                           e.stopPropagation();
-                          if (onRemoveCity) {
-                            onRemoveCity(day.cityId);
-                          } else {
-                            onRemoveDay(idx);
-                          }
+                          // Remove this specific city-intro by index — not all with same cityId
+                          onRemoveDay(idx);
                           setConfirmRemove(null);
                         }}
                         className="text-[9px] font-bold uppercase tracking-widest bg-black text-white px-2 py-0.5 hover:bg-red-700"
