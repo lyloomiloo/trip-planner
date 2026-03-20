@@ -274,7 +274,10 @@ function itineraryReducer(state: ItineraryData, action: Action): ItineraryData {
 
     case "REMOVE_CITY": {
       const { [action.cityId]: _, ...rest } = state.cities;
-      return { ...state, cities: rest };
+      // Also remove all days belonging to this city (including city intros)
+      const filteredDays = state.days.filter((d) => d.cityId !== action.cityId);
+      const renumbered = renumberDays(filteredDays);
+      return { ...state, cities: rest, days: renumbered };
     }
 
     case "ADD_COMMENT": {

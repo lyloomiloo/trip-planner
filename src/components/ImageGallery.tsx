@@ -249,6 +249,17 @@ export default function ImageGallery({
   const handleAutoFill = useCallback(async (page: number = 1) => {
     if (!autoSearchTerms || autoSearchTerms.length === 0) return;
 
+    // If gallery is empty, create slots first
+    if (gallery.length === 0) {
+      const slotsToCreate = Math.min(autoSearchTerms.length * 2, 5);
+      for (let s = 0; s < slotsToCreate; s++) {
+        onAddSlot();
+      }
+      // Let the state update propagate — re-call on next tick
+      setTimeout(() => handleAutoFill(page), 100);
+      return;
+    }
+
     const emptySlotIndices = gallery
       .map((s, i) => (!s.url ? i : -1))
       .filter((i) => i >= 0);
@@ -280,7 +291,7 @@ export default function ImageGallery({
     }
 
     setAutoFilling(false);
-  }, [autoSearchTerms, gallery, onUpdateSlot]);
+  }, [autoSearchTerms, gallery, onUpdateSlot, onAddSlot]);
 
   // Refresh: clear all auto-filled images, then re-fill with next page
   const handleRefreshAutoFill = useCallback(async () => {
@@ -323,7 +334,7 @@ export default function ImageGallery({
       {/* Gallery action buttons — hidden when locked */}
       {!locked && (
         <div className="flex items-center gap-3 mb-2">
-          {autoSearchTerms && autoSearchTerms.length > 0 && hasEmptySlots && (
+          {autoSearchTerms && autoSearchTerms.length > 0 && (hasEmptySlots || gallery.length === 0) && (
             <button
               onClick={() => handleAutoFill(autoFillPage)}
               disabled={autoFilling}
