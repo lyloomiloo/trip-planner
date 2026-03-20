@@ -66,7 +66,7 @@ export default function SlideIndex({ slides }: SlideIndexProps) {
 
       {/* Slide-in sidebar */}
       <div
-        className={`fixed right-0 top-0 bottom-0 z-50 bg-white border-l-2 border-black w-52 transition-transform duration-200 ease-out overflow-y-auto ${
+        className={`fixed right-0 top-0 bottom-0 z-50 bg-white border-l-2 border-black w-44 sm:w-52 transition-transform duration-200 ease-out overflow-y-auto ${
           open ? "translate-x-0" : "translate-x-full"
         }`}
         onMouseLeave={() => setOpen(false)}
@@ -94,7 +94,7 @@ export default function SlideIndex({ slides }: SlideIndexProps) {
               <button
                 key={slide.id}
                 onClick={() => { scrollTo(slide.id); setOpen(false); }}
-                className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-left transition-colors rounded-sm group/idx ${
+                className={`w-full flex items-center gap-2 px-2.5 py-1.5 text-left transition-colors rounded-sm group/idx overflow-hidden ${
                   isActive
                     ? "bg-neutral-50"
                     : "hover:text-[#C80815]"
@@ -115,18 +115,18 @@ export default function SlideIndex({ slides }: SlideIndexProps) {
 
                 {/* Label */}
                 <span
-                  className={`text-[9px] font-bold uppercase tracking-widest transition-colors ${
+                  className={`text-[9px] font-bold uppercase tracking-widest transition-colors shrink-0 ${
                     isActive ? "text-black" : "text-neutral-400 group-hover/idx:text-[#C80815]"
                   }`}
                 >
                   {slide.label}
                 </span>
 
-                {/* Sublabel */}
+                {/* Sublabel — truncated */}
                 {slide.sublabel && (
-                  <span className={`text-[8px] uppercase tracking-widest ml-auto transition-colors ${
+                  <span className={`text-[8px] uppercase tracking-widest ml-auto truncate max-w-[50%] transition-colors ${
                     isActive ? "text-neutral-300" : "text-neutral-200 group-hover/idx:text-[#C80815]/40"
-                  }`}>
+                  }`} title={slide.sublabel}>
                     {slide.sublabel}
                   </span>
                 )}

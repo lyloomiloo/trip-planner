@@ -171,16 +171,19 @@ export default function DaySlide({
               })
             }
             onRemoveSlot={(i) => onRemoveGallerySlot(dayIndex, i)}
-            autoSearchTerms={[
-              city.name,
-              ...day.events
-                .filter((e) => e.type !== "split" && e.title && e.highlight)
-                .map((e) => `${e.title} ${city.name}`),
-              ...day.events
-                .filter((e) => e.type !== "split" && e.title && !e.highlight)
-                .slice(0, 3)
-                .map((e) => `${e.title} ${city.name}`),
-            ]}
+            autoSearchTerms={(() => {
+              const loc = day.weatherCityName || city.name;
+              return [
+                loc,
+                ...day.events
+                  .filter((e) => e.type !== "split" && e.title && e.highlight)
+                  .map((e) => `${e.title} ${loc}`),
+                ...day.events
+                  .filter((e) => e.type !== "split" && e.title && !e.highlight)
+                  .slice(0, 3)
+                  .map((e) => `${e.title} ${loc}`),
+              ];
+            })()}
             locked={locked}
             dayNumber={day.dayNumber}
           />

@@ -115,7 +115,7 @@ export default function Overview({ data, onClose, onMoveDay, onRemoveDay, onRemo
                   className={`
                     group/card flex items-center gap-3 py-2 cursor-grab active:cursor-grabbing transition-all relative
                     ${isDragging ? "opacity-40 scale-[0.98]" : ""}
-                    ${isDragOver ? "bg-neutral-50" : ""}
+                    ${isDragOver ? "border-t-2 border-black" : ""}
                   `}
                 >
                   <span className="text-[10px] font-bold uppercase tracking-widest bg-black text-white px-2.5 py-1">
@@ -183,7 +183,7 @@ export default function Overview({ data, onClose, onMoveDay, onRemoveDay, onRemo
                 className={`
                   group/card border border-neutral-200 rounded-sm p-4 cursor-grab active:cursor-grabbing transition-all relative
                   ${isDragging ? "opacity-40 scale-[0.98]" : ""}
-                  ${isDragOver ? "border-dashed border-neutral-400 bg-neutral-50" : "bg-white hover:bg-neutral-50"}
+                  ${isDragOver ? "border-t-2 border-t-black bg-neutral-50" : "bg-white hover:bg-neutral-50"}
                 `}
               >
                 {/* Remove x button */}

@@ -424,7 +424,7 @@ export default function Home() {
       dayNumber: nextNum,
       date: nextDate,
       weekday: nextWeekday,
-      cityId: lastDay?.cityId ?? "city-1",
+      cityId: "",
       route: "",
       accommodation: "",
       events: [],

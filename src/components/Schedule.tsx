@@ -47,17 +47,17 @@ export default function Schedule({
   onRemoveComment,
 }: ScheduleProps) {
   const dragItem = useRef<number | null>(null);
-  const dragOverItem = useRef<number | null>(null);
+  const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
   const [colorPickerIdx, setColorPickerIdx] = useState<number | null>(null);
 
   const handleDragStart = (index: number) => { dragItem.current = index; };
-  const handleDragEnter = (index: number) => { dragOverItem.current = index; };
+  const handleDragEnter = (index: number) => { setDragOverIdx(index); };
   const handleDragEnd = () => {
-    if (dragItem.current !== null && dragOverItem.current !== null && dragItem.current !== dragOverItem.current) {
-      onReorderEvents(dragItem.current, dragOverItem.current);
+    if (dragItem.current !== null && dragOverIdx !== null && dragItem.current !== dragOverIdx) {
+      onReorderEvents(dragItem.current, dragOverIdx);
     }
     dragItem.current = null;
-    dragOverItem.current = null;
+    setDragOverIdx(null);
   };
 
   // Parse events into segments: normal, split/merge pairs
@@ -135,7 +135,7 @@ export default function Schedule({
         onDragEnter={() => handleDragEnter(globalIndex)}
         onDragEnd={handleDragEnd}
         onDragOver={(e) => e.preventDefault()}
-        className={`group/evt flex items-start gap-4 py-2 relative ${highlightClass}`}
+        className={`group/evt flex items-start gap-4 py-2 relative ${highlightClass} ${dragOverIdx === globalIndex && dragItem.current !== null && dragItem.current !== globalIndex ? "border-t-2 border-black" : ""}`}
         style={{ ...bgStyle, borderRadius: bgStyle ? "4px" : undefined, padding: bgStyle ? "4px 8px" : undefined }}
       >
         {/* Left-side controls: drag, color, comment */}
