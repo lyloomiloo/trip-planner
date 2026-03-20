@@ -10,9 +10,10 @@ interface OverviewProps {
   onClose: () => void;
   onMoveDay: (fromIndex: number, toIndex: number) => void;
   onRemoveDay: (dayIndex: number) => void;
+  onRemoveCity?: (cityId: string) => void;
 }
 
-export default function Overview({ data, onClose, onMoveDay, onRemoveDay }: OverviewProps) {
+export default function Overview({ data, onClose, onMoveDay, onRemoveDay, onRemoveCity }: OverviewProps) {
   const [downloading, setDownloading] = useState(false);
   const [dragIdx, setDragIdx] = useState<number | null>(null);
   const [dragOverIdx, setDragOverIdx] = useState<number | null>(null);
@@ -67,7 +68,7 @@ export default function Overview({ data, onClose, onMoveDay, onRemoveDay }: Over
           disabled={downloading}
           className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 hover:text-black"
         >
-          {downloading ? "Downloading..." : "Download PDF"}
+          {downloading ? "Downloading..." : "Download for Mobile"}
         </button>
       </div>
 
@@ -125,9 +126,17 @@ export default function Overview({ data, onClose, onMoveDay, onRemoveDay }: Over
                   {/* Remove city */}
                   {confirmRemove === idx ? (
                     <div className="flex items-center gap-2 bg-white border-2 border-black px-3 py-1.5 z-10" data-no-pdf>
-                      <span className="text-[9px] font-bold uppercase tracking-widest">Remove {city?.name}?</span>
+                      <span className="text-[9px] font-bold uppercase tracking-widest">Remove {city?.name} card?</span>
                       <button
-                        onClick={(e) => { e.stopPropagation(); onRemoveDay(idx); setConfirmRemove(null); }}
+                        onClick={(e) => {
+                          e.stopPropagation();
+                          if (onRemoveCity) {
+                            onRemoveCity(day.cityId);
+                          } else {
+                            onRemoveDay(idx);
+                          }
+                          setConfirmRemove(null);
+                        }}
                         className="text-[9px] font-bold uppercase tracking-widest bg-black text-white px-2 py-0.5 hover:bg-red-700"
                       >
                         Yes

@@ -237,7 +237,19 @@ export default function DaySlide({
           />
         )}
         <span className="mx-2">/</span>
-        <span>{city.name}, {city.country}</span>
+        {locked ? (
+          <span>{day.weatherCityName || `${city.name}, ${city.country}`}</span>
+        ) : (
+          <EditableText
+            value={day.weatherCityName || `${city.name}, ${city.country}`}
+            onChange={(v) => {
+              if (onUpdateDayWeatherLoc) {
+                onUpdateDayWeatherLoc(dayIndex, day.weatherLat ?? city.lat, day.weatherLng ?? city.lng, v);
+              }
+            }}
+            placeholder="Location"
+          />
+        )}
       </div>
 
       {/* Bottom-right hover controls — hidden when locked */}

@@ -13,8 +13,12 @@ interface ToolbarProps {
   locked: boolean;
   onToggleLock: () => void;
   syncStatus?: SyncStatus;
-  onPublish?: () => void; // publish to cloud (set passphrase)
-  onExportPdf?: () => void;
+  onPublish?: () => void;
+  onExportJson?: () => void;
+  onUndo?: () => void;
+  onRedo?: () => void;
+  canUndo?: boolean;
+  canRedo?: boolean;
 }
 
 export default function Toolbar({
@@ -27,7 +31,11 @@ export default function Toolbar({
   onToggleLock,
   syncStatus,
   onPublish,
-  onExportPdf,
+  onExportJson,
+  onUndo,
+  onRedo,
+  canUndo,
+  canRedo,
 }: ToolbarProps) {
   const [showCityInput, setShowCityInput] = useState(false);
   const [cityInput, setCityInput] = useState("");
@@ -110,6 +118,37 @@ export default function Toolbar({
 
             <span className="text-neutral-200">|</span>
           </>
+        )}
+
+        {/* Undo / Redo */}
+        {onUndo && (
+          <button
+            onClick={onUndo}
+            disabled={!canUndo}
+            className={`${btnClass} ${!canUndo ? "opacity-20 cursor-default" : ""}`}
+            title="Undo (Ctrl+Z)"
+          >
+            Undo
+          </button>
+        )}
+        {onRedo && (
+          <button
+            onClick={onRedo}
+            disabled={!canRedo}
+            className={`${btnClass} ${!canRedo ? "opacity-20 cursor-default" : ""}`}
+            title="Redo (Ctrl+Shift+Z)"
+          >
+            Redo
+          </button>
+        )}
+
+        <span className="text-neutral-200">|</span>
+
+        {/* Export JSON */}
+        {onExportJson && (
+          <button onClick={onExportJson} className={btnClass}>
+            Export
+          </button>
         )}
 
         <button onClick={onShare} className={btnClass}>

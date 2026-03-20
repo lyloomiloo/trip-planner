@@ -88,7 +88,8 @@ function ensureCityIntros(days: DayData[], cities: Record<string, import("@/type
       continue;
     }
     // Check if we need to insert a city-intro before this day
-    if (day.cityId !== lastCityId) {
+    // Only insert if the city still exists in the cities dict (not explicitly removed)
+    if (day.cityId !== lastCityId && cities[day.cityId]) {
       // Only insert if there isn't already a city-intro for this city right before
       const prevEntry = result[result.length - 1];
       if (!prevEntry || !prevEntry.isCityIntro || prevEntry.cityId !== day.cityId) {
@@ -274,10 +275,11 @@ function itineraryReducer(state: ItineraryData, action: Action): ItineraryData {
 
     case "REMOVE_CITY": {
       const { [action.cityId]: _, ...rest } = state.cities;
-      // Also remove all days belonging to this city (including city intros)
-      const filteredDays = state.days.filter((d) => d.cityId !== action.cityId);
-      const renumbered = renumberDays(filteredDays);
-      return { ...state, cities: rest, days: renumbered };
+      // Only remove the city-intro slide — leave day cards untouched
+      const filteredDays = state.days.filter(
+        (d) => !(d.isCityIntro && d.cityId === action.cityId)
+      );
+      return { ...state, cities: rest, days: filteredDays };
     }
 
     case "ADD_COMMENT": {
@@ -322,12 +324,94 @@ const defaultData = rawData as unknown as ItineraryData;
 
 export type SyncStatus = "idle" | "syncing" | "synced" | "error" | "offline";
 
+// ─── History snapshot ────────────────────────────────────
+interface HistoryEntry {
+  state: ItineraryData;
+  timestamp: number;
+  label: string;
+}
+
+const MAX_HISTORY = 50;
+const HISTORY_DEBOUNCE_MS = 3000; // group rapid changes into one snapshot
+
 export function useItinerary(tripId?: string, initialData?: ItineraryData) {
   // Priority: explicit initialData > localStorage > bundled JSON
   const raw = initialData ?? (tripId ? loadTrip(tripId) : null) ?? defaultData;
   const startData = { ...raw, days: ensureCityIntros(raw.days, raw.cities) };
   const [state, dispatch] = useReducer(itineraryReducer, startData);
   const [syncStatus, setSyncStatus] = useState<SyncStatus>("idle");
+
+  // ─── Undo / history ───────────────────────────────────
+  const [history, setHistory] = useState<HistoryEntry[]>([
+    { state: startData, timestamp: Date.now(), label: "Initial" },
+  ]);
+  const [historyIndex, setHistoryIndex] = useState(0);
+  const lastSnapshotTime = useRef(Date.now());
+  const isUndoRedo = useRef(false);
+
+  // Snapshot the state whenever it changes (debounced)
+  useEffect(() => {
+    if (isUndoRedo.current) {
+      isUndoRedo.current = false;
+      return;
+    }
+    const now = Date.now();
+    if (now - lastSnapshotTime.current < HISTORY_DEBOUNCE_MS) {
+      // Update the current snapshot in-place instead of creating a new one
+      setHistory((prev) => {
+        const updated = [...prev];
+        updated[historyIndex] = { state, timestamp: now, label: "Edit" };
+        return updated;
+      });
+      return;
+    }
+    lastSnapshotTime.current = now;
+    setHistory((prev) => {
+      // Trim future entries if we edited after undoing
+      const base = prev.slice(0, historyIndex + 1);
+      const next = [...base, { state, timestamp: now, label: "Edit" }];
+      // Cap history length
+      if (next.length > MAX_HISTORY) next.shift();
+      return next;
+    });
+    setHistoryIndex((prev) => Math.min(prev + 1, MAX_HISTORY - 1));
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [state]);
+
+  const canUndo = historyIndex > 0;
+  const canRedo = historyIndex < history.length - 1;
+
+  const undo = useCallback(() => {
+    if (historyIndex <= 0) return;
+    const newIdx = historyIndex - 1;
+    isUndoRedo.current = true;
+    setHistoryIndex(newIdx);
+    dispatch({ type: "LOAD_DATA", data: history[newIdx].state });
+  }, [historyIndex, history]);
+
+  const redo = useCallback(() => {
+    if (historyIndex >= history.length - 1) return;
+    const newIdx = historyIndex + 1;
+    isUndoRedo.current = true;
+    setHistoryIndex(newIdx);
+    dispatch({ type: "LOAD_DATA", data: history[newIdx].state });
+  }, [historyIndex, history]);
+
+  // Keyboard shortcuts: Cmd/Ctrl+Z for undo, Cmd/Ctrl+Shift+Z for redo
+  useEffect(() => {
+    const handler = (e: KeyboardEvent) => {
+      if ((e.metaKey || e.ctrlKey) && e.key === "z") {
+        e.preventDefault();
+        if (e.shiftKey) {
+          redo();
+        } else {
+          undo();
+        }
+      }
+    };
+    window.addEventListener("keydown", handler);
+    return () => window.removeEventListener("keydown", handler);
+  }, [undo, redo]);
 
   // Auto-save to localStorage + debounced Supabase sync
   const isFirstRender = useRef(true);
@@ -540,5 +624,12 @@ export function useItinerary(tripId?: string, initialData?: ItineraryData) {
     addComment,
     updateComment,
     removeComment,
+    // Undo/redo
+    undo,
+    redo,
+    canUndo,
+    canRedo,
+    history,
+    historyIndex,
   };
 }

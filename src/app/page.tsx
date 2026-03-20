@@ -58,6 +58,11 @@ export default function Home() {
     addComment,
     updateComment,
     removeComment,
+    exportJSON,
+    undo,
+    redo,
+    canUndo,
+    canRedo,
   } = useItinerary(activeTripId, initialData);
 
   // Passphrase modal state
@@ -131,7 +136,7 @@ export default function Home() {
         entries.push({
           id: `slide-day-${slide.dayIndex}`,
           label: `Day ${day.dayNumber}`,
-          sublabel: day.cityId,
+          sublabel: day.route || state.cities[day.cityId]?.name || day.cityId,
           type: "day",
         });
       }
@@ -577,6 +582,7 @@ export default function Home() {
           onClose={() => setShowOverview(false)}
           onMoveDay={moveDay}
           onRemoveDay={removeDay}
+          onRemoveCity={removeCity}
         />
       )}
 
@@ -594,6 +600,11 @@ export default function Home() {
         onToggleLock={() => setLocked((l) => !l)}
         syncStatus={syncStatus}
         onPublish={supabaseEnabled && !hasPassphrase ? () => setShowPassphraseModal(true) : undefined}
+        onExportJson={exportJSON}
+        onUndo={undo}
+        onRedo={redo}
+        canUndo={canUndo}
+        canRedo={canRedo}
       />
 
       {/* Passphrase modal */}
@@ -632,11 +643,7 @@ export default function Home() {
                 maxCityNameLength={maxCityNameLength}
                 isGenerating={generatingCityId === slide.cityId}
                 onRemove={() => {
-                  const dayIndicesToRemove = state.days
-                    .map((d, idx) => d.cityId === slide.cityId ? idx : -1)
-                    .filter(idx => idx >= 0)
-                    .reverse();
-                  dayIndicesToRemove.forEach(idx => removeDay(idx));
+                  // Only removes the city card + intro slide — day cards are untouched
                   removeCity(slide.cityId);
                 }}
                 onRetryGenerate={async () => {
@@ -660,8 +667,16 @@ export default function Home() {
         }
 
         const day = state.days[slide.dayIndex];
-        const city = state.cities[day.cityId];
-        if (!city) return null;
+        const city = state.cities[day.cityId] ?? {
+          name: day.cityId.replace(/-/g, " ").replace(/\b\w/g, c => c.toUpperCase()),
+          splitName: ["", ""] as [string, string],
+          country: "",
+          countryLabel: "",
+          lat: 47.0,
+          lng: 8.0,
+          description: "",
+          mapZoom: 13,
+        };
         return (
           <div key={`day-${day.dayNumber}-${slide.dayIndex}`} id={`slide-day-${slide.dayIndex}`} data-slide>
             <DaySlide
