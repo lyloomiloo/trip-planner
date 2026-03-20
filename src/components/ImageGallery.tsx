@@ -320,10 +320,10 @@ export default function ImageGallery({
 
   return (
     <>
-      {/* Auto-fill buttons above gallery — hidden when locked */}
-      {!locked && autoSearchTerms && autoSearchTerms.length > 0 && (
+      {/* Gallery action buttons — hidden when locked */}
+      {!locked && (
         <div className="flex items-center gap-3 mb-2">
-          {hasEmptySlots && (
+          {autoSearchTerms && autoSearchTerms.length > 0 && hasEmptySlots && (
             <button
               onClick={() => handleAutoFill(autoFillPage)}
               disabled={autoFilling}
@@ -332,7 +332,7 @@ export default function ImageGallery({
               {autoFilling ? "Filling..." : "Auto-fill images"}
             </button>
           )}
-          {hasAutoFilledSlots && !autoFilling && (
+          {autoSearchTerms && autoSearchTerms.length > 0 && hasAutoFilledSlots && !autoFilling && (
             <button
               onClick={handleRefreshAutoFill}
               className="text-[10px] font-bold uppercase tracking-widest text-neutral-300 hover:text-neutral-500"
@@ -341,6 +341,12 @@ export default function ImageGallery({
               ↻ Refresh
             </button>
           )}
+          <button
+            onClick={() => onAddSlot()}
+            className="text-[10px] font-bold uppercase tracking-widest text-neutral-300 hover:text-neutral-500"
+          >
+            + Add image frame
+          </button>
         </div>
       )}
 

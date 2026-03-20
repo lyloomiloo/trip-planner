@@ -60,32 +60,51 @@ export default function Schedule({
     dragOverItem.current = null;
   };
 
-  // Find split and merge indices
-  const splitIndex = events.findIndex((e) => e.type === "split");
-  const hasSplit = splitIndex >= 0;
-  // Find merge point (next split-type event after splitIndex, or use a "merge" marker)
-  // For now, look for a second "split" event that acts as merge
-  const mergeIndex = hasSplit ? events.findIndex((e, i) => i > splitIndex && e.type === "split") : -1;
-  const hasMerge = mergeIndex >= 0;
+  // Parse events into segments: normal, split/merge pairs
+  // A "split" type event starts a split section, the next "split" type merges it back
+  type Segment =
+    | { kind: "normal"; events: { event: ScheduleEvent; globalIdx: number }[] }
+    | { kind: "split"; splitIdx: number; mergeIdx: number; hasExplicitMerge: boolean; groupA: { event: ScheduleEvent; globalIdx: number }[]; groupB: { event: ScheduleEvent; globalIdx: number }[] };
 
-  // Segment events
-  const beforeSplit = hasSplit ? events.slice(0, splitIndex) : events;
-  const splitEvents = hasSplit
-    ? events.slice(splitIndex + 1, hasMerge ? mergeIndex : events.length)
-    : [];
-  const afterMerge = hasMerge ? events.slice(mergeIndex + 1) : [];
-
-  // Split events into groups
-  const groupAEvents: { event: ScheduleEvent; globalIdx: number }[] = [];
-  const groupBEvents: { event: ScheduleEvent; globalIdx: number }[] = [];
-  splitEvents.forEach((ev, i) => {
-    const gIdx = splitIndex + 1 + i;
-    if (ev.group === "B") {
-      groupBEvents.push({ event: ev, globalIdx: gIdx });
+  const segments: Segment[] = [];
+  let i = 0;
+  while (i < events.length) {
+    if (events[i].type === "split") {
+      const splitIdx = i;
+      // Find matching merge (next split-type event)
+      let mergeIdx = -1;
+      for (let j = i + 1; j < events.length; j++) {
+        if (events[j].type === "split") { mergeIdx = j; break; }
+      }
+      const hasExplicitMerge = mergeIdx >= 0;
+      const end = hasExplicitMerge ? mergeIdx : events.length;
+      const groupA: { event: ScheduleEvent; globalIdx: number }[] = [];
+      const groupB: { event: ScheduleEvent; globalIdx: number }[] = [];
+      for (let j = splitIdx + 1; j < end; j++) {
+        if (events[j].group === "B") {
+          groupB.push({ event: events[j], globalIdx: j });
+        } else {
+          groupA.push({ event: events[j], globalIdx: j });
+        }
+      }
+      segments.push({ kind: "split", splitIdx, mergeIdx, hasExplicitMerge, groupA, groupB });
+      i = hasExplicitMerge ? mergeIdx + 1 : events.length;
     } else {
-      groupAEvents.push({ event: ev, globalIdx: gIdx });
+      // Collect consecutive normal events
+      const normalEvents: { event: ScheduleEvent; globalIdx: number }[] = [];
+      while (i < events.length && events[i].type !== "split") {
+        normalEvents.push({ event: events[i], globalIdx: i });
+        i++;
+      }
+      segments.push({ kind: "normal", events: normalEvents });
     }
-  });
+  }
+
+  // Legacy compat: detect if any split exists (for bottom button)
+  const hasSplit = segments.some((s) => s.kind === "split");
+  // Check if the last segment is a split without merge (open-ended)
+  const lastSegment = segments[segments.length - 1];
+  const hasOpenSplit = lastSegment?.kind === "split" && !lastSegment.hasExplicitMerge;
 
   const renderFullEvent = (event: ScheduleEvent, globalIndex: number) => {
     const colorClass = TYPE_COLORS[event.type] || "";
@@ -222,78 +241,66 @@ export default function Schedule({
 
   return (
     <div>
-      {/* Events before split */}
-      <div className="space-y-0.5">
-        {beforeSplit.map((event, i) => renderFullEvent(event, i))}
-      </div>
-
-      {/* Split divider */}
-      {hasSplit && (
-        <>
-          <div className="flex items-center gap-3 my-5">
-            <div className="flex-1 h-px bg-neutral-200" />
-            <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-300">Split</span>
-            {!locked && <button onClick={() => onRemoveEvent(splitIndex)} className="text-[9px] text-neutral-200 hover:text-red-500">&times;</button>}
-            <div className="flex-1 h-px bg-neutral-200" />
-          </div>
-
-          {/* Two-column split area */}
-          <div className="flex gap-4 mb-3">
-            {/* Group A */}
-            <div className="flex-1 min-w-0 border-l-2 border-neutral-200 pl-3">
-              <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-300 block mb-2">Group A</span>
-              {groupAEvents.map(({ event, globalIdx }) => renderCompactEvent(event, globalIdx))}
-              {!locked && (
-                <button
-                  onClick={() => onAddEvent("A")}
-                  className="text-xs text-neutral-300 hover:text-neutral-500 mt-3 ml-auto flex items-center gap-1 font-bold uppercase tracking-wider"
-                >
-                  <span className="text-sm leading-none">+</span> Add
-                </button>
-              )}
+      {segments.map((seg, sIdx) => {
+        if (seg.kind === "normal") {
+          return (
+            <div key={`seg-${sIdx}`} className="space-y-0.5">
+              {seg.events.map(({ event, globalIdx }) => renderFullEvent(event, globalIdx))}
             </div>
-            {/* Group B */}
-            <div className="flex-1 min-w-0 border-l-2 border-neutral-400 pl-3">
-              <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 block mb-2">Group B</span>
-              {groupBEvents.map(({ event, globalIdx }) => renderCompactEvent(event, globalIdx))}
-              {!locked && (
-                <button
-                  onClick={() => onAddEvent("B")}
-                  className="text-xs text-neutral-300 hover:text-neutral-500 mt-3 ml-auto flex items-center gap-1 font-bold uppercase tracking-wider"
-                >
-                  <span className="text-sm leading-none">+</span> Add
-                </button>
-              )}
-            </div>
-          </div>
+          );
+        }
 
-          {/* Merge divider (if exists) */}
-          {hasMerge ? (
+        // Split segment
+        return (
+          <div key={`seg-${sIdx}`}>
+            {/* Split divider */}
             <div className="flex items-center gap-3 my-5">
               <div className="flex-1 h-px bg-neutral-200" />
-              <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-300">Merge</span>
-              {!locked && <button onClick={() => onRemoveEvent(mergeIndex)} className="text-[9px] text-neutral-200 hover:text-red-500">&times;</button>}
+              <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-300">Split</span>
+              {!locked && <button onClick={() => onRemoveEvent(seg.splitIdx)} className="text-[10px] font-bold border border-neutral-300 hover:border-red-400 text-neutral-400 hover:text-red-500 w-5 h-5 flex items-center justify-center transition-colors" title="Remove split">&times;</button>}
               <div className="flex-1 h-px bg-neutral-200" />
             </div>
-          ) : !locked ? (
-            <button
-              onClick={onAddMergeEvent}
-              className="flex items-center gap-2 text-[10px] text-neutral-300 hover:text-neutral-500 my-3"
-            >
-              <div className="flex-1 h-px bg-neutral-100 w-8" />
-              <span className="uppercase tracking-widest font-bold">+ Merge back</span>
-              <div className="flex-1 h-px bg-neutral-100 w-8" />
-            </button>
-          ) : null}
 
-          {/* Events after merge */}
-          {hasMerge && (
-            <div className="space-y-0.5">
-              {afterMerge.map((event, i) => renderFullEvent(event, mergeIndex + 1 + i))}
+            {/* Two-column split area */}
+            <div className="flex gap-4 mb-3">
+              <div className="flex-1 min-w-0 border-l-2 border-neutral-200 pl-3">
+                <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-300 block mb-2">Group A</span>
+                {seg.groupA.map(({ event, globalIdx }) => renderCompactEvent(event, globalIdx))}
+                {!locked && (
+                  <button onClick={() => onAddEvent("A")} className="text-xs text-neutral-300 hover:text-neutral-500 mt-3 ml-auto flex items-center gap-1 font-bold uppercase tracking-wider">
+                    <span className="text-sm leading-none">+</span> Add
+                  </button>
+                )}
+              </div>
+              <div className="flex-1 min-w-0 border-l-2 border-neutral-400 pl-3">
+                <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 block mb-2">Group B</span>
+                {seg.groupB.map(({ event, globalIdx }) => renderCompactEvent(event, globalIdx))}
+                {!locked && (
+                  <button onClick={() => onAddEvent("B")} className="text-xs text-neutral-300 hover:text-neutral-500 mt-3 ml-auto flex items-center gap-1 font-bold uppercase tracking-wider">
+                    <span className="text-sm leading-none">+</span> Add
+                  </button>
+                )}
+              </div>
             </div>
-          )}
-        </>
-      )}
+
+            {/* Merge divider */}
+            {seg.hasExplicitMerge ? (
+              <div className="flex items-center gap-3 my-5">
+                <div className="flex-1 h-px bg-neutral-200" />
+                <span className="text-[9px] font-bold uppercase tracking-widest text-neutral-300">Merge</span>
+                {!locked && <button onClick={() => onRemoveEvent(seg.mergeIdx)} className="text-[10px] font-bold border border-neutral-300 hover:border-red-400 text-neutral-400 hover:text-red-500 w-5 h-5 flex items-center justify-center transition-colors" title="Remove merge">&times;</button>}
+                <div className="flex-1 h-px bg-neutral-200" />
+              </div>
+            ) : !locked ? (
+              <button onClick={onAddMergeEvent} className="flex items-center gap-2 text-[10px] text-neutral-300 hover:text-neutral-500 my-3 w-full">
+                <div className="flex-1 h-px bg-neutral-100" />
+                <span className="uppercase tracking-widest font-bold">+ Merge back</span>
+                <div className="flex-1 h-px bg-neutral-100" />
+              </button>
+            ) : null}
+          </div>
+        );
+      })}
 
       {/* Bottom buttons — hidden when locked */}
       {!locked && (
@@ -304,7 +311,7 @@ export default function Schedule({
           >
             <span className="text-base leading-none">+</span> Add event
           </button>
-          {!hasSplit && onAddSplitEvent && (
+          {!hasOpenSplit && onAddSplitEvent && (
             <button
               onClick={onAddSplitEvent}
               className="text-sm text-neutral-300 hover:text-neutral-500 flex items-center gap-2 font-bold uppercase tracking-wider"

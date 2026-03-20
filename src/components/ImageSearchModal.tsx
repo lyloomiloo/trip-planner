@@ -219,13 +219,15 @@ function PasteUrlTab({ onSelect }: { onSelect: ImageSearchModalProps["onSelect"]
         </div>
       )}
 
-      <button
-        onClick={() => onSelect(url, undefined, "url")}
-        disabled={!valid}
-        className="bg-black text-white px-4 py-2 text-xs font-bold uppercase tracking-wider hover:bg-neutral-800 disabled:opacity-30 disabled:cursor-not-allowed"
-      >
-        Use this image
-      </button>
+      <div className="flex justify-end">
+        <button
+          onClick={() => onSelect(url, undefined, "url")}
+          disabled={!valid}
+          className="bg-black text-white px-4 py-2 text-xs font-bold uppercase tracking-wider hover:bg-neutral-800 disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          Use this image
+        </button>
+      </div>
     </div>
   );
 }
@@ -301,13 +303,15 @@ function UploadTab({ onSelect }: { onSelect: ImageSearchModalProps["onSelect"] }
         </div>
       )}
 
-      <button
-        onClick={() => preview && onSelect(preview, undefined, "upload")}
-        disabled={!preview}
-        className="bg-black text-white px-4 py-2 text-xs font-bold uppercase tracking-wider hover:bg-neutral-800 disabled:opacity-30 disabled:cursor-not-allowed"
-      >
-        Use this image
-      </button>
+      <div className="flex justify-end">
+        <button
+          onClick={() => preview && onSelect(preview, undefined, "upload")}
+          disabled={!preview}
+          className="bg-black text-white px-4 py-2 text-xs font-bold uppercase tracking-wider hover:bg-neutral-800 disabled:opacity-30 disabled:cursor-not-allowed"
+        >
+          Use this image
+        </button>
+      </div>
     </div>
   );
 }
