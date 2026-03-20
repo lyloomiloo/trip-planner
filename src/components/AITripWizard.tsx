@@ -82,6 +82,27 @@ export default function AITripWizard({ onBack, onComplete }: AITripWizardProps) 
     }
   }, [gen.step, gen.currentSuggestion, fetchCityImages]);
 
+  // Auto-detect user location on mount
+  useEffect(() => {
+    if (origin) return; // already set
+    if (!navigator.geolocation) return;
+    navigator.geolocation.getCurrentPosition(
+      async (pos) => {
+        try {
+          const res = await fetch(
+            `https://nominatim.openstreetmap.org/reverse?lat=${pos.coords.latitude}&lon=${pos.coords.longitude}&format=json&zoom=10`
+          );
+          const data = await res.json();
+          const city = data.address?.city || data.address?.town || data.address?.state || "";
+          if (city) setOrigin(city);
+        } catch { /* silent */ }
+      },
+      () => { /* denied or error — silent */ },
+      { timeout: 5000 }
+    );
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
   const canGenerate = region.trim() && origin.trim() && duration > 0 && startDate;
 
   const handleGenerate = () => {
@@ -295,7 +316,14 @@ export default function AITripWizard({ onBack, onComplete }: AITripWizardProps) 
 
             {/* Error */}
             {gen.error && (
-              <p className="text-xs text-red-500 font-bold uppercase tracking-widest">{gen.error}</p>
+              <div className="border-2 border-black bg-neutral-50 p-4 text-center">
+                <p className="text-sm font-black uppercase tracking-wide text-black">
+                  🐯 Slow down, tiger!
+                </p>
+                <p className="text-xs text-neutral-500 mt-1">
+                  The AI needs a break (i.e. we&apos;ve run out of credits). Try again tomorrow.
+                </p>
+              </div>
             )}
 
             {/* Generate button */}
@@ -376,7 +404,26 @@ export default function AITripWizard({ onBack, onComplete }: AITripWizardProps) 
                           {visibleActivities.length > 0 && (
                             <div className="mt-4 space-y-2">
                               {visibleActivities.map((dayActs, d) => (
-                                <div key={d} className="flex gap-2 items-start">
+                                <div
+                                  key={d}
+                                  draggable
+                                  onDragStart={(e) => { e.dataTransfer.setData("text/plain", `${i}-${d}`); }}
+                                  onDragOver={(e) => e.preventDefault()}
+                                  onDrop={(e) => {
+                                    e.preventDefault();
+                                    const [srcCity, srcDay] = e.dataTransfer.getData("text/plain").split("-").map(Number);
+                                    if (srcCity !== i || srcDay === d) return;
+                                    const updated = [...gen.currentSuggestion!.cities];
+                                    const acts = [...(updated[i].activities || [])];
+                                    const [moved] = acts.splice(srcDay, 1);
+                                    acts.splice(d, 0, moved);
+                                    updated[i] = { ...updated[i], activities: acts };
+                                    gen.updateCurrentCities(updated);
+                                  }}
+                                  className="flex gap-2 items-center group/dayrow"
+                                >
+                                  {/* Drag handle */}
+                                  <span className="opacity-0 group-hover/dayrow:opacity-30 cursor-grab text-sm select-none shrink-0">⠿</span>
                                   <div className="flex-1">
                                     <p className="text-[9px] font-bold uppercase tracking-widest text-neutral-400 mb-1">Day {d + 1}</p>
                                     <div className="flex flex-wrap gap-1.5">
@@ -390,14 +437,13 @@ export default function AITripWizard({ onBack, onComplete }: AITripWizardProps) 
                                       })}
                                     </div>
                                   </div>
-                                  {/* Remove day — box with ✕ on right */}
+                                  {/* Remove day — box with ✕ on right, vertically centered */}
                                   {visibleActivities.length > 1 && (
                                     <button
                                       onClick={() => {
                                         const updated = [...gen.currentSuggestion!.cities];
                                         const newActivities = [...(updated[i].activities || [])];
                                         newActivities.splice(d, 1);
-                                        // Scale cost proportionally
                                         const oldNights = updated[i].nights;
                                         const newNights = Math.max(1, oldNights - 1);
                                         const ratio = newNights / oldNights;
@@ -411,7 +457,7 @@ export default function AITripWizard({ onBack, onComplete }: AITripWizardProps) 
                                         updated[i] = { ...updated[i], activities: newActivities, nights: newNights, costEstimate: newCost };
                                         gen.updateCurrentCities(updated);
                                       }}
-                                      className="shrink-0 w-6 h-6 border border-neutral-200 flex items-center justify-center text-neutral-300 hover:border-red-400 hover:text-red-500 transition-colors mt-1"
+                                      className="shrink-0 w-6 h-6 border border-neutral-200 flex items-center justify-center text-neutral-300 hover:border-red-400 hover:text-red-500 transition-colors"
                                       title="Remove this day"
                                     >
                                       ✕
@@ -419,6 +465,28 @@ export default function AITripWizard({ onBack, onComplete }: AITripWizardProps) 
                                   )}
                                 </div>
                               ))}
+                              {/* Add day to this city */}
+                              <button
+                                onClick={() => {
+                                  const updated = [...gen.currentSuggestion!.cities];
+                                  const oldNights = updated[i].nights;
+                                  const newNights = oldNights + 1;
+                                  const ratio = newNights / oldNights;
+                                  const oldCost = updated[i].costEstimate;
+                                  const newCost = oldCost ? {
+                                    accommodation: Math.round(oldCost.accommodation * ratio),
+                                    food: Math.round(oldCost.food * ratio),
+                                    activities: Math.round(oldCost.activities * ratio),
+                                    transport: oldCost.transport,
+                                  } : oldCost;
+                                  const newActivities = [...(updated[i].activities || []), [{ title: "Free day", type: "rest" as const }]];
+                                  updated[i] = { ...updated[i], activities: newActivities, nights: newNights, costEstimate: newCost };
+                                  gen.updateCurrentCities(updated);
+                                }}
+                                className="mt-2 text-[9px] font-bold uppercase tracking-widest text-neutral-300 hover:text-neutral-500 transition-colors"
+                              >
+                                + Add Day
+                              </button>
                             </div>
                           )}
                         </div>
@@ -508,7 +576,14 @@ export default function AITripWizard({ onBack, onComplete }: AITripWizardProps) 
 
             {/* Error */}
             {gen.error && (
-              <p className="text-xs text-red-500 font-bold uppercase tracking-widest mb-4">{gen.error}</p>
+              <div className="border-2 border-black bg-neutral-50 p-4 text-center mb-4">
+                <p className="text-sm font-black uppercase tracking-wide text-black">
+                  🐯 Slow down, tiger!
+                </p>
+                <p className="text-xs text-neutral-500 mt-1">
+                  The AI needs a break (i.e. we&apos;ve run out of credits). Try again tomorrow.
+                </p>
+              </div>
             )}
 
             {/* Action buttons */}
