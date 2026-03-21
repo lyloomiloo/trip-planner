@@ -168,6 +168,56 @@ async function replaceLeafletMaps(
 }
 
 /**
+ * Convert cross-origin images to inline data URIs so html2canvas can capture them.
+ * Returns a restore function to undo the changes.
+ */
+async function inlineExternalImages(container: HTMLElement): Promise<() => void> {
+  const imgs = Array.from(container.querySelectorAll<HTMLImageElement>("img"));
+  const originals: { img: HTMLImageElement; src: string }[] = [];
+
+  await Promise.all(
+    imgs.map(async (img) => {
+      const src = img.src;
+      if (!src || src.startsWith("data:") || src.startsWith("blob:")) return;
+
+      try {
+        const res = await fetch(src, { mode: "cors" });
+        const blob = await res.blob();
+        const dataUri = await new Promise<string>((resolve) => {
+          const reader = new FileReader();
+          reader.onloadend = () => resolve(reader.result as string);
+          reader.readAsDataURL(blob);
+        });
+        originals.push({ img, src });
+        img.src = dataUri;
+      } catch {
+        // If fetch fails, try via a proxy canvas
+        try {
+          const c = document.createElement("canvas");
+          c.width = img.naturalWidth || img.width || 300;
+          c.height = img.naturalHeight || img.height || 200;
+          const ctx = c.getContext("2d");
+          if (ctx) {
+            ctx.drawImage(img, 0, 0);
+            const dataUri = c.toDataURL("image/jpeg", 0.9);
+            originals.push({ img, src });
+            img.src = dataUri;
+          }
+        } catch {
+          // Skip images that can't be inlined
+        }
+      }
+    })
+  );
+
+  return () => {
+    originals.forEach(({ img, src }) => {
+      img.src = src;
+    });
+  };
+}
+
+/**
  * Captures each slide section as a screenshot and assembles them into a landscape PDF.
  * Pass cityLookup to get real map images instead of gray placeholders.
  */
@@ -198,6 +248,9 @@ export async function exportSlidesToPdf(
   for (let i = 0; i < slides.length; i++) {
     const slide = slides[i];
 
+    // Inline external images so html2canvas can capture them
+    const restoreImages = await inlineExternalImages(slide);
+
     // Replace maps with static images
     const iframeRestorers = await replaceIframesWithStatic(slide, cityLookup);
     const leafletRestorers = await replaceLeafletMaps(slide, cityLookup);
@@ -215,9 +268,10 @@ export async function exportSlidesToPdf(
 
     slide.style.overflow = prevOverflow;
 
-    // Restore maps
+    // Restore everything
     iframeRestorers.forEach((r) => r());
     leafletRestorers.forEach((r) => r());
+    restoreImages();
 
     const imgData = canvas.toDataURL("image/jpeg", 0.92);
     const imgW = canvas.width;
