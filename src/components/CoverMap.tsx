@@ -95,7 +95,7 @@ export default function CoverMap({ cities }: CoverMapProps) {
 
     const bounds = new google.maps.LatLngBounds();
     cityList.forEach((c) => bounds.extend({ lat: c.lat, lng: c.lng }));
-    map.fitBounds(bounds, { top: 40, right: 40, bottom: 40, left: 40 });
+    map.fitBounds(bounds, { top: 20, right: 20, bottom: 20, left: 20 });
   }
 
   return <div ref={mapRef} className="w-full h-full" />;

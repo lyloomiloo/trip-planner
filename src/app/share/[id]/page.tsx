@@ -158,7 +158,7 @@ export default function SharePage() {
           &larr; Home
         </button>
 
-        <div className="flex items-center gap-3">
+        <div className="absolute left-1/2 -translate-x-1/2 flex items-center gap-3">
           <button
             onClick={() => setShowOverview(true)}
             className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 hover:text-black"
@@ -174,6 +174,10 @@ export default function SharePage() {
             {downloading ? "Exporting..." : "PDF"}
           </button>
         </div>
+
+        <span className="text-[10px] font-bold uppercase tracking-widest text-[#C80815]">
+          🔒 View Only
+        </span>
       </div>
 
       {/* Slide index */}
