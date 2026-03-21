@@ -178,99 +178,65 @@ A small fixed toolbar in the bottom-right corner:
 
 ## Tech Stack
 
-- **Next.js 14** (App Router) — or plain React if simpler for the use case
-- **Tailwind CSS** — utility classes for the layout
-- **React state + useReducer** — for managing the itinerary data
-- **Google Maps Embed API** — for city intro slides (free, no key for embed iframe)
-- **Open-Meteo API** — for weather (free)
-- **Image search API** — Unsplash (recommended) or Pexels (user provides free key)
-- **Framer Motion** — minimal, only for modal transitions and slot fill animations
+- **Next.js 14** (App Router)
+- **Tailwind CSS** — utility classes for layout
+- **React state + useReducer** — itinerary data mutations via `useItinerary`
+- **Google Maps JavaScript API** — cover map (grayscale + red pins via `CoverMap.tsx`), city intro maps (embed iframes)
+- **Open-Meteo API** — weather (free, no key)
+- **Unsplash / Pexels API** — image search (user provides free key)
+- **html2canvas-pro + jsPDF** — PDF export
+- **Supabase** (optional) — remote trip sync + sharing
 
 ---
 
-## File Structure
+## Code Principles
 
-```
-europe-alps-tour/
-├── CLAUDE.md                         ← this file
-├── package.json
-├── next.config.js
-├── tailwind.config.ts
-├── tsconfig.json
-├── .env.example
-├── data/
-│   └── itinerary.json                ← master data (already exists)
-├── public/
-│   └── map-cover.png                 ← static grayscale map for cover (optional)
-├── src/
-│   ├── app/
-│   │   ├── layout.tsx                ← fonts, global styles
-│   │   ├── page.tsx                  ← single-page app, all slides
-│   │   └── globals.css
-│   ├── components/
-│   │   ├── CoverSlide.tsx            ← hero map with title overlay
-│   │   ├── CityIntroSlide.tsx        ← city info + map + split name overlay
-│   │   ├── DaySlide.tsx              ← THE main component: gallery + schedule
-│   │   ├── WeatherWidget.tsx         ← small weather display
-│   │   ├── ImageGallery.tsx          ← asymmetric grid with editable slots
-│   │   ├── ImageSearchModal.tsx      ← tabbed modal: Search / Paste URL / Upload
-│   │   ├── Schedule.tsx              ← editable time + event list
-│   │   ├── EditableText.tsx          ← reusable click-to-edit component
-│   │   ├── Toolbar.tsx               ← floating export/import/add controls
-│   │   └── GallerySlot.tsx           ← single image slot with search/remove
-│   ├── hooks/
-│   │   ├── useItinerary.ts           ← useReducer for all data mutations
-│   │   ├── useWeather.ts             ← fetch + cache weather data
-│   │   └── useImageSearch.ts         ← image search API wrapper
-│   ├── lib/
-│   │   ├── weather.ts                ← Open-Meteo API functions
-│   │   └── images.ts                 ← image search API functions
-│   └── types/
-│       └── itinerary.ts              ← TypeScript types matching the JSON
-```
+**Keep it simple. Keep it structured. Keep it elegant.**
+
+1. **Simplicity first** — prefer the straightforward solution. Don't add abstractions, wrappers, or indirection unless there's a concrete reason. Three similar lines > one premature helper.
+2. **One responsibility per file** — each component does one thing. `CoverMap` renders the map. `MapPins` is dead code (remove if found). `CoverSlide` composes them.
+3. **Let the platform do the work** — use Google Maps JS API for pin placement (not CSS overlays). Use `fitBounds()` for zoom (not hardcoded values). Use `styles: [{saturation: -100}]` for grayscale (not CSS filters that also gray out pins).
+4. **Dynamic over hardcoded** — the cover map auto-fits to whatever cities exist in the data. Don't hardcode lat/lng bounds, zoom levels, or viewport calculations. New itineraries with different cities should just work.
+5. **No dead code** — if something is replaced, delete the old version. Don't leave unused components, commented-out blocks, or backwards-compat shims.
+6. **Minimal diff** — when fixing a bug, change only what's broken. Don't refactor surrounding code, add types to unchanged functions, or "improve" things that aren't part of the task.
 
 ---
 
-## Implementation Order
+## Architecture Notes
 
-1. **Types & data loading**: Define TS types, load `itinerary.json`, set up `useItinerary` reducer
-2. **Root layout**: Fonts (Playfair Display + DM Sans from Google Fonts), CSS variables, global styles
-3. **EditableText component**: The reusable click-to-edit building block
-4. **Schedule component**: Editable time/title list with add/remove
-5. **WeatherWidget**: Fetch from Open-Meteo, display date/weather/sunrise/sunset
-6. **GallerySlot + ImageGallery**: Empty slots with click-to-search, asymmetric CSS grid
-7. **ImageSearchModal**: Tabbed modal with 3 tabs — Search (API), Paste URL (with live preview), Upload (drag-and-drop + file picker → base64). Uses `validateImageUrl` and `fileToBase64` from `lib/images.ts`.
-8. **DaySlide**: Combine gallery + schedule + weather into the day layout
-9. **CityIntroSlide**: Map embed + split name overlay + city info
-10. **CoverSlide**: Static map + scattered title text
-11. **Toolbar**: Export/import JSON, add day
-12. **Page assembly**: Stitch all slides together in scroll order
-13. **Polish**: Hover states, transitions, responsive tweaks
+### Cover Map (`CoverMap.tsx`)
+- Uses **Google Maps JavaScript API** (not embed iframe, not Leaflet, not Static Maps)
+- `google.maps.Marker` with custom red SVG pin icon
+- `map.fitBounds()` auto-zooms to show all cities with padding
+- `styles: [{saturation: -100}]` for native grayscale (keeps pins in color)
+- Loaded via `dynamic(() => import("./CoverMap"), { ssr: false })`
+- API key: `NEXT_PUBLIC_GOOGLE_MAPS_STATIC_KEY` (also enabled for Maps JS API)
 
----
+### PDF Export (`exportPdf.ts`)
+- Each PDF page matches the slide's exact aspect ratio (no whitespace)
+- Replaces iframes/Leaflet maps with static images before capture
+- Available on both main page and share page (view-only)
 
-## Critical Details
-
-- **The gallery grid is NOT uniform**. Images have different sizes. Use CSS grid with named areas or varied row/column spans. The reference shows: one large image (spans 2 cols or 2 rows), two medium images side by side, one small image, one large image below. The exact layout varies per day based on how many gallery slots exist.
-- **The schedule is NOT a table**. It's just time on the left, description on the right, with generous vertical spacing. No borders, no alternating rows. Just clean typography.
-- **City name overlays are decorative**. They're positioned absolutely over the map, huge, black, and partially obscured by the map edges. They don't need to be fully readable — they're a design element.
-- **Everything saves to React state**. No backend, no database. The user exports JSON when they want to save, imports to restore. Keep it simple.
-- **Empty image slots are a first-class UI element**. They should look inviting, not broken. Dashed border, centered "+" icon, light gray background.
+### Share Page (`/share/[id]`)
+- View-only: all slides render with `locked={true}`, no editing handlers
+- Has Overview + Download PDF buttons (no edit capabilities)
+- Loads from localStorage or Supabase
 
 ---
 
 ## Environment Variables (.env.local)
 
 ```bash
-# Pick ONE image search provider and add its key (both free, no credit card):
+# Google Maps (enable both Static Maps API and Maps JavaScript API)
+NEXT_PUBLIC_GOOGLE_MAPS_STATIC_KEY=
 
-# RECOMMENDED: Unsplash (50 req/hr free, best travel photos)
-# Sign up: https://unsplash.com/developers → New Application → copy Access Key
+# Image search — pick one:
 NEXT_PUBLIC_UNSPLASH_ACCESS_KEY=
-
-# ALTERNATIVE: Pexels (200 req/hr free, good variety)
-# Sign up: https://www.pexels.com/api/ → copy API Key
 NEXT_PUBLIC_PEXELS_API_KEY=
 
-# Weather is free, no key needed (Open-Meteo)
+# Weather: Open-Meteo (free, no key needed)
+
+# Optional: Supabase for remote sync
+NEXT_PUBLIC_SUPABASE_URL=
+NEXT_PUBLIC_SUPABASE_ANON_KEY=
 ```

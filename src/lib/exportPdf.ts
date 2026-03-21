@@ -186,13 +186,14 @@ export async function exportSlidesToPdf(
     (window as unknown as Record<string, unknown>).__GMAPS_STATIC_KEY__ = gKey;
   }
 
-  const pdf = new jsPDF({ orientation: "landscape", unit: "px", format: "a4" });
-  const pageW = pdf.internal.pageSize.getWidth();
-  const pageH = pdf.internal.pageSize.getHeight();
+  // Use a fixed width, let each page's height match the slide's aspect ratio
+  const PDF_W = 842; // A4 landscape width in px at 72dpi
 
   // Hide interactive-only elements
   const allNoPdfEls = Array.from(document.querySelectorAll<HTMLElement>("[data-no-pdf]"));
   allNoPdfEls.forEach((e) => (e.style.display = "none"));
+
+  let pdf: jsPDF | null = null;
 
   for (let i = 0; i < slides.length; i++) {
     const slide = slides[i];
@@ -222,20 +223,22 @@ export async function exportSlidesToPdf(
     const imgW = canvas.width;
     const imgH = canvas.height;
 
-    const ratio = Math.min(pageW / imgW, pageH / imgH);
-    const w = imgW * ratio;
-    const h = imgH * ratio;
-    const x = (pageW - w) / 2;
-    const y = (pageH - h) / 2;
+    // Page height matches the slide's aspect ratio — no whitespace
+    const pageH = (imgH / imgW) * PDF_W;
 
-    if (i > 0) pdf.addPage();
-    pdf.addImage(imgData, "JPEG", x, y, w, h);
+    if (!pdf) {
+      pdf = new jsPDF({ orientation: "landscape", unit: "px", format: [PDF_W, pageH] });
+    } else {
+      pdf.addPage([PDF_W, pageH], "landscape");
+    }
+
+    pdf.addImage(imgData, "JPEG", 0, 0, PDF_W, pageH);
   }
 
   // Restore hidden elements
   allNoPdfEls.forEach((e) => (e.style.display = ""));
 
-  pdf.save(filename);
+  pdf?.save(filename);
 }
 
 /**

@@ -4,11 +4,13 @@ import { useEffect, useMemo, useState } from "react";
 import { useParams, useRouter } from "next/navigation";
 import { loadTrip, saveTrip } from "@/lib/tripStore";
 import { isSupabaseEnabled, loadTripFromRemote } from "@/lib/supabaseSync";
+import { exportSlidesToPdf } from "@/lib/exportPdf";
 import type { ItineraryData } from "@/types/itinerary";
 import CoverSlide from "@/components/CoverSlide";
 import CityIntroSlide from "@/components/CityIntroSlide";
 import DaySlide from "@/components/DaySlide";
 import SlideIndex from "@/components/SlideIndex";
+import Overview from "@/components/Overview";
 
 /** Shared view — permanently locked, no editing capabilities */
 export default function SharePage() {
@@ -18,6 +20,8 @@ export default function SharePage() {
   const [trip, setTrip] = useState<ItineraryData | null>(null);
   const [notFound, setNotFound] = useState(false);
   const [loading, setLoading] = useState(true);
+  const [showOverview, setShowOverview] = useState(false);
+  const [downloading, setDownloading] = useState(false);
 
   useEffect(() => {
     async function load() {
@@ -128,6 +132,18 @@ export default function SharePage() {
   const noop2 = (_a: number, _b: number) => {};
   const noop3 = (_a: number, _b: number, _c: number) => {};
 
+  const handleExportPdf = async () => {
+    if (!trip) return;
+    setDownloading(true);
+    const title = trip.tripTitle.join(" ").toLowerCase().replace(/\s+/g, "-");
+    const cityLookup: Record<string, { lat: number; lng: number; mapZoom: number }> = {};
+    Object.entries(trip.cities).forEach(([id, c]) => {
+      cityLookup[id] = { lat: c.lat, lng: c.lng, mapZoom: c.mapZoom };
+    });
+    await exportSlidesToPdf("", "[data-slide]", `${title}.pdf`, cityLookup);
+    setDownloading(false);
+  };
+
   return (
     <main className="min-h-screen bg-white">
       {/* Minimal view-only toolbar */}
@@ -142,10 +158,21 @@ export default function SharePage() {
           &larr; Home
         </button>
 
-        <div className="flex items-center gap-4">
-          <span className="text-[10px] font-bold uppercase tracking-widest text-[#C80815]">
-            {"\u{1F512}"} View Only
-          </span>
+        <div className="flex items-center gap-3">
+          <button
+            onClick={() => setShowOverview(true)}
+            className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 hover:text-black"
+          >
+            Overview
+          </button>
+          <span className="text-[10px] text-neutral-300">|</span>
+          <button
+            onClick={handleExportPdf}
+            disabled={downloading}
+            className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 hover:text-black disabled:opacity-40"
+          >
+            {downloading ? "Exporting..." : "PDF"}
+          </button>
         </div>
       </div>
 
@@ -208,6 +235,16 @@ export default function SharePage() {
           );
         })}
       </div>
+
+      {/* Overview modal — view-only, no editing handlers */}
+      {showOverview && (
+        <Overview
+          data={trip}
+          onClose={() => setShowOverview(false)}
+          onMoveDay={noop2}
+          onRemoveDay={noop}
+        />
+      )}
     </main>
   );
 }

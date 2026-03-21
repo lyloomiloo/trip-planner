@@ -1,73 +1,102 @@
 "use client";
 
-import { useEffect } from "react";
-import { MapContainer, TileLayer, Marker, useMap } from "react-leaflet";
-import L from "leaflet";
-import "leaflet/dist/leaflet.css";
+import { useEffect, useRef, useMemo } from "react";
 import type { CityData } from "@/types/itinerary";
 
-// Custom red pin icon matching the original SVG design
-const pinIcon = L.divIcon({
-  html: `<svg width="24" height="32" viewBox="0 0 18 24" fill="none">
-    <path d="M9 0C4.03 0 0 4.03 0 9c0 6.75 9 15 9 15s9-8.25 9-15c0-4.97-4.03-9-9-9z" fill="#C0392B"/>
-    <circle cx="9" cy="9" r="3.5" fill="#7B241C"/>
-  </svg>`,
-  className: "",
-  iconSize: [24, 32],
-  iconAnchor: [12, 32],
-});
+const MAPS_KEY = process.env.NEXT_PUBLIC_GOOGLE_MAPS_STATIC_KEY ?? "";
 
-/** Auto-fits the map bounds to show all cities with padding */
-function FitBounds({ cities }: { cities: CityData[] }) {
-  const map = useMap();
-  useEffect(() => {
-    if (cities.length === 0) return;
-    const bounds = L.latLngBounds(cities.map((c) => [c.lat, c.lng]));
-    map.fitBounds(bounds, { padding: [80, 80], animate: false });
-  }, [cities, map]);
-  return null;
-}
+// Grayscale map style — applied natively so markers stay in color
+const MAP_STYLES: google.maps.MapTypeStyle[] = [
+  { featureType: "all", stylers: [{ saturation: -100 }] },
+  { featureType: "water", stylers: [{ lightness: 30 }] },
+];
+
 
 interface CoverMapProps {
   cities: Record<string, CityData>;
 }
 
 export default function CoverMap({ cities }: CoverMapProps) {
-  const cityList = Object.values(cities);
-  const center: [number, number] =
-    cityList.length > 0
-      ? [
-          cityList.reduce((s, c) => s + c.lat, 0) / cityList.length,
-          cityList.reduce((s, c) => s + c.lng, 0) / cityList.length,
-        ]
-      : [47, 11.2];
+  const mapRef = useRef<HTMLDivElement>(null);
+  const mapInstanceRef = useRef<google.maps.Map | null>(null);
+  const markersRef = useRef<google.maps.Marker[]>([]);
 
-  return (
-    <MapContainer
-      center={center}
-      zoom={6}
-      className="w-full h-full"
-      zoomControl={false}
-      attributionControl={false}
-      dragging={false}
-      scrollWheelZoom={false}
-      doubleClickZoom={false}
-      touchZoom={false}
-      keyboard={false}
-    >
-      <TileLayer
-        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-        attribution=""
-        className="grayscale-tiles"
-      />
-      <FitBounds cities={cityList} />
-      {cityList.map((city) => (
-        <Marker
-          key={city.name}
-          position={[city.lat, city.lng]}
-          icon={pinIcon}
-        />
-      ))}
-    </MapContainer>
-  );
+  const cityList = useMemo(() => Object.values(cities).filter((c) => c.lat && c.lng), [cities]);
+
+  // Load the Google Maps script once
+  useEffect(() => {
+    if (typeof google !== "undefined" && google.maps) {
+      initMap();
+      return;
+    }
+
+    const existing = document.querySelector('script[src*="maps.googleapis.com"]');
+    if (existing) {
+      existing.addEventListener("load", () => initMap());
+      return;
+    }
+
+    const script = document.createElement("script");
+    script.src = `https://maps.googleapis.com/maps/api/js?key=${MAPS_KEY}&v=weekly`;
+    script.async = true;
+    script.defer = true;
+    script.onload = () => initMap();
+    document.head.appendChild(script);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
+
+  // Update markers when cities change
+  useEffect(() => {
+    if (!mapInstanceRef.current) return;
+    updateMarkers();
+    fitBounds();
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [cityList]);
+
+  function initMap() {
+    if (!mapRef.current || mapInstanceRef.current) return;
+
+    mapInstanceRef.current = new google.maps.Map(mapRef.current, {
+      center: { lat: 47, lng: 11.2 },
+      zoom: 6,
+      disableDefaultUI: true,
+      gestureHandling: "none",
+      keyboardShortcuts: false,
+      styles: MAP_STYLES,
+      backgroundColor: "#e5e5e5",
+    });
+
+    updateMarkers();
+    fitBounds();
+  }
+
+  function updateMarkers() {
+    const map = mapInstanceRef.current;
+    if (!map) return;
+
+    // Clear old markers
+    markersRef.current.forEach((m) => m.setMap(null));
+    markersRef.current = [];
+
+    // Add new markers
+    cityList.forEach((city) => {
+      const marker = new google.maps.Marker({
+        position: { lat: city.lat, lng: city.lng },
+        map,
+        clickable: false,
+      });
+      markersRef.current.push(marker);
+    });
+  }
+
+  function fitBounds() {
+    const map = mapInstanceRef.current;
+    if (!map || cityList.length === 0) return;
+
+    const bounds = new google.maps.LatLngBounds();
+    cityList.forEach((c) => bounds.extend({ lat: c.lat, lng: c.lng }));
+    map.fitBounds(bounds, { top: 40, right: 40, bottom: 40, left: 40 });
+  }
+
+  return <div ref={mapRef} className="w-full h-full" />;
 }

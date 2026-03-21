@@ -4,7 +4,6 @@ import { useState } from "react";
 import dynamic from "next/dynamic";
 import type { ItineraryData, CityData } from "@/types/itinerary";
 
-// Dynamic import — Leaflet accesses `window` so it can't SSR
 const CoverMap = dynamic(() => import("./CoverMap"), { ssr: false });
 
 // Positions for the 4 title words — deliberately offset, not aligned
@@ -37,6 +36,7 @@ export default function CoverSlide({
   const [geocoding, setGeocoding] = useState(false);
 
   const allCities = data.cities;
+
 
   // Auto-geocode city name using OpenStreetMap Nominatim (free, no key)
   const geocodeCity = async (name: string) => {
@@ -82,8 +82,8 @@ export default function CoverSlide({
       className="relative w-full overflow-hidden bg-neutral-200 snap-start"
       style={{ minHeight: "var(--slide-h)", height: "var(--slide-h)", scrollSnapStop: "always" }}
     >
-      {/* Map background — Leaflet with OpenStreetMap, pins placed natively */}
-      <div className="absolute inset-0 pointer-events-none" style={{ zIndex: 0 }}>
+      {/* Google Maps JS API — renders map + pins in a div, auto-fits to cities */}
+      <div className="absolute inset-0 pointer-events-none cover-map-container">
         <CoverMap cities={allCities} />
       </div>
 

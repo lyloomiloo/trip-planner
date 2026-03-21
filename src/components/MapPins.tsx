@@ -1,83 +1,54 @@
 "use client";
 
-import { useRef, useEffect, useState } from "react";
 import type { CityData } from "@/types/itinerary";
 
-interface MapPinsProps {
-  cities: Record<string, CityData>;
-  center: { lat: number; lng: number };
-  zoom: number;
-}
+// Map viewport bounds calibrated to Google Maps embed centered at (47.0, 11.2) with !1d3000000
+// Calibrated using Vienna (~85%, ~22%) and Geneva (~19%, ~44%) as anchor points
+const BOUNDS = {
+  latMin: 42.0,
+  latMax: 52.7,
+  lngMin: 3.2,
+  lngMax: 18.7,
+};
 
-// Web Mercator: convert lng to world pixel X at given zoom
-function lngToWorldX(lng: number, zoom: number) {
-  return ((lng + 180) / 360) * 256 * Math.pow(2, zoom);
-}
-
-// Web Mercator: convert lat to world pixel Y at given zoom
-function latToWorldY(lat: number, zoom: number) {
+// Mercator projection for accurate latitude positioning
+function mercatorY(lat: number) {
   const latRad = (lat * Math.PI) / 180;
-  return (
-    ((1 - Math.log(Math.tan(latRad) + 1 / Math.cos(latRad)) / Math.PI) / 2) *
-    256 *
-    Math.pow(2, zoom)
-  );
+  return Math.log(Math.tan(Math.PI / 4 + latRad / 2));
 }
 
-export default function MapPins({ cities, center, zoom }: MapPinsProps) {
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [size, setSize] = useState({ w: 1920, h: 1080 });
+const MERC_MAX = mercatorY(BOUNDS.latMax);
+const MERC_MIN = mercatorY(BOUNDS.latMin);
 
-  useEffect(() => {
-    const el = containerRef.current;
-    if (!el) return;
-    const update = () => {
-      setSize({ w: el.clientWidth, h: el.clientHeight });
-    };
-    update();
-    const ro = new ResizeObserver(() => update());
-    ro.observe(el);
-    return () => ro.disconnect();
-  }, []);
+function toPercent(city: CityData) {
+  const x = ((city.lng - BOUNDS.lngMin) / (BOUNDS.lngMax - BOUNDS.lngMin)) * 100;
+  const yMerc = mercatorY(city.lat);
+  const y = ((MERC_MAX - yMerc) / (MERC_MAX - MERC_MIN)) * 100;
+  return { left: `${x}%`, top: `${y}%` };
+}
 
-  const centerWX = lngToWorldX(center.lng, zoom);
-  const centerWY = latToWorldY(center.lat, zoom);
-
+export default function MapPins({ cities }: { cities: Record<string, CityData> }) {
   return (
-    <div
-      ref={containerRef}
-      className="absolute inset-0 pointer-events-none"
-      style={{ zIndex: 10 }}
-    >
+    <>
       {Object.values(cities).map((city) => {
-        const wx = lngToWorldX(city.lng, zoom);
-        const wy = latToWorldY(city.lat, zoom);
-        const dx = wx - centerWX;
-        const dy = wy - centerWY;
-
-        // Convert world pixel offset to % of container
-        const leftPct = 50 + (dx / size.w) * 100;
-        const topPct = 50 + (dy / size.h) * 100;
-
-        if (leftPct < -5 || leftPct > 105 || topPct < -5 || topPct > 105)
-          return null;
-
+        const pos = toPercent(city);
         return (
           <div
             key={city.name}
-            className="absolute -translate-x-1/2 -translate-y-full"
-            style={{ left: `${leftPct}%`, top: `${topPct}%` }}
+            className="absolute z-10 -translate-x-1/2 -translate-y-full pointer-events-none"
+            style={{ left: pos.left, top: pos.top }}
           >
+            {/* Pin SVG */}
             <svg width="18" height="24" viewBox="0 0 18 24" fill="none">
               <path
                 d="M9 0C4.03 0 0 4.03 0 9c0 6.75 9 15 9 15s9-8.25 9-15c0-4.97-4.03-9-9-9z"
-                fill="#C80815"
+                fill="#C0392B"
               />
-              <circle cx="9" cy="9" r="3.5" fill="#8A0510" />
+              <circle cx="9" cy="9" r="3.5" fill="#7B241C" />
             </svg>
           </div>
         );
       })}
-    </div>
+    </>
   );
 }
