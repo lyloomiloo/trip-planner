@@ -15,6 +15,7 @@ interface ToolbarProps {
   syncStatus?: SyncStatus;
   onPublish?: () => void;
   onExportJson?: () => void;
+  onExportPdf?: () => void;
   onUndo?: () => void;
   onRedo?: () => void;
   canUndo?: boolean;
@@ -32,6 +33,7 @@ export default function Toolbar({
   syncStatus,
   onPublish,
   onExportJson,
+  onExportPdf,
   onUndo,
   onRedo,
   canUndo,
@@ -148,6 +150,13 @@ export default function Toolbar({
         {onExportJson && (
           <button onClick={onExportJson} className={btnClass}>
             Export
+          </button>
+        )}
+
+        {/* Export PDF */}
+        {onExportPdf && (
+          <button onClick={onExportPdf} className={btnClass}>
+            PDF
           </button>
         )}
 

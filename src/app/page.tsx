@@ -5,6 +5,7 @@ import { useItinerary } from "@/hooks/useItinerary";
 import { loadTrip, saveTrip, generateTripId, createBlankItinerary, saveTripPassphrase, getTripPassphrase, deriveMeta } from "@/lib/tripStore";
 import { isSupabaseEnabled, createTripRemote } from "@/lib/supabaseSync";
 import { generateCityDetails, queuePendingCity, removePendingCity, getPendingCities } from "@/lib/gemini";
+import { exportSlidesToPdf } from "@/lib/exportPdf";
 import LandingPage from "@/components/LandingPage";
 import NewTripForm from "@/components/NewTripForm";
 import type { NewTripData } from "@/components/NewTripForm";
@@ -252,6 +253,18 @@ export default function Home() {
     setToastMsg(msg);
     setToastVisible(true);
   }, []);
+
+  /** Export PDF — capture all slides with static maps */
+  const handleExportPdf = useCallback(async () => {
+    showToast("Generating PDF...");
+    const cityLookup: Record<string, { lat: number; lng: number; mapZoom: number; name: string }> = {};
+    for (const [id, city] of Object.entries(state.cities)) {
+      cityLookup[id] = { lat: city.lat, lng: city.lng, mapZoom: city.mapZoom, name: city.name };
+    }
+    const title = state.tripTitle?.join("-") || "itinerary";
+    await exportSlidesToPdf("", "[data-slide]", `${title}.pdf`, cityLookup);
+    showToast("PDF downloaded");
+  }, [state.cities, state.tripTitle, showToast]);
 
   /** Share — copy share link to clipboard */
   const handleShare = useCallback(() => {
@@ -584,6 +597,7 @@ export default function Home() {
         syncStatus={syncStatus}
         onPublish={supabaseEnabled && !hasPassphrase ? () => setShowPassphraseModal(true) : undefined}
         onExportJson={exportJSON}
+        onExportPdf={handleExportPdf}
         onUndo={undo}
         onRedo={redo}
         canUndo={canUndo}
