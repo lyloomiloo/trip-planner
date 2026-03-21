@@ -149,7 +149,7 @@ export default function Toolbar({
         {/* Export JSON */}
         {onExportJson && (
           <button onClick={onExportJson} className={btnClass}>
-            Export
+            .JSON
           </button>
         )}
 
