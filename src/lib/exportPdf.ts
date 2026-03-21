@@ -180,26 +180,29 @@ async function inlineExternalImages(container: HTMLElement): Promise<() => void>
       const src = img.src;
       if (!src || src.startsWith("data:") || src.startsWith("blob:")) return;
 
-      try {
-        const res = await fetch(src, { mode: "cors" });
-        const blob = await res.blob();
-        const dataUri = await new Promise<string>((resolve) => {
+      // Helper to convert a blob to a data URI
+      const blobToDataUri = (blob: Blob): Promise<string> =>
+        new Promise((resolve) => {
           const reader = new FileReader();
           reader.onloadend = () => resolve(reader.result as string);
           reader.readAsDataURL(blob);
         });
+
+      try {
+        // First try direct CORS fetch (works for Unsplash, Pexels, etc.)
+        const res = await fetch(src, { mode: "cors" });
+        const blob = await res.blob();
+        const dataUri = await blobToDataUri(blob);
         originals.push({ img, src });
         img.src = dataUri;
       } catch {
-        // If fetch fails, try via a proxy canvas
+        // CORS blocked — use server-side proxy to bypass
         try {
-          const c = document.createElement("canvas");
-          c.width = img.naturalWidth || img.width || 300;
-          c.height = img.naturalHeight || img.height || 200;
-          const ctx = c.getContext("2d");
-          if (ctx) {
-            ctx.drawImage(img, 0, 0);
-            const dataUri = c.toDataURL("image/jpeg", 0.9);
+          const proxyUrl = `/api/proxy-image?url=${encodeURIComponent(src)}`;
+          const res = await fetch(proxyUrl);
+          if (res.ok) {
+            const blob = await res.blob();
+            const dataUri = await blobToDataUri(blob);
             originals.push({ img, src });
             img.src = dataUri;
           }
