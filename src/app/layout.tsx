@@ -2,8 +2,8 @@ import type { Metadata } from "next";
 import "./globals.css";
 
 export const metadata: Metadata = {
-  title: "Europe Alps Tour 2026",
-  description: "Trip planning tool — Geneva to Vienna",
+  title: "Trip Planner",
+  description: "Interactive trip planning tool",
 };
 
 export default function RootLayout({

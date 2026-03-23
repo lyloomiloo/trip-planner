@@ -233,16 +233,16 @@ export default function Home() {
       try {
         const data = JSON.parse(e.target?.result as string) as ItineraryData;
         const title = data.tripTitle?.join(" ") || "Imported Trip";
-        const tripId = generateTripId(title);
+        let tripId = generateTripId(title);
+        // Ensure unique ID — append suffix if a trip with this ID already exists
+        if (loadTrip(tripId)) {
+          tripId = `${tripId}-${Date.now()}`;
+        }
         saveTrip(tripId, data);
         setActiveTripId(tripId);
         setInitialData(data);
         loadData(data);
         setView("trip");
-
-        if (isSupabaseEnabled()) {
-          setTimeout(() => setShowPassphraseModal(true), 500);
-        }
 
         if (isSupabaseEnabled()) {
           setTimeout(() => setShowPassphraseModal(true), 500);
