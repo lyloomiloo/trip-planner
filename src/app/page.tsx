@@ -239,6 +239,14 @@ export default function Home() {
         setInitialData(data);
         loadData(data);
         setView("trip");
+
+        if (isSupabaseEnabled()) {
+          setTimeout(() => setShowPassphraseModal(true), 500);
+        }
+
+        if (isSupabaseEnabled()) {
+          setTimeout(() => setShowPassphraseModal(true), 500);
+        }
       } catch {
         alert("Invalid JSON file");
       }
