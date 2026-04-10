@@ -23,7 +23,7 @@ PlanMyTrip is an interactive trip planning web application built with **Next.js 
 ---
 
 ### Project Structure
-
+```
 europe-alps-tour/
 ├── src/
 │   ├── app/
@@ -90,7 +90,7 @@ europe-alps-tour/
 ---
 
 ### Core Data Model
-
+```
 Defined in itinerary.ts:
 
 ItineraryData
