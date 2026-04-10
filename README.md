@@ -189,8 +189,8 @@ SUPABASE_SERVICE_ROLE_KEY=`
 ---
 
 ### Supabase Schema
-
-`CREATE TABLE trips (
+```
+CREATE TABLE trips (
   id TEXT PRIMARY KEY,
   passphrase_hash TEXT NOT NULL,
   meta JSONB NOT NULL DEFAULT '{}',
@@ -198,8 +198,8 @@ SUPABASE_SERVICE_ROLE_KEY=`
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
--- RLS: public read, service-role-only write`
-
+-- RLS: public read, service-role-only write
+```
 ---
 
 ### Design Tokens
