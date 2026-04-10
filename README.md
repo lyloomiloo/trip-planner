@@ -5,7 +5,7 @@ PlanMyTrip is an interactive trip planning web application built with **Next.js 
 ---
 
 ### Tech Stack
-
+```
 | Layer | Technology |
 | --- | --- |
 | Framework | Next.js 14 (App Router) |
@@ -19,7 +19,7 @@ PlanMyTrip is an interactive trip planning web application built with **Next.js 
 | PDF Export | html2canvas-pro + jsPDF |
 | Persistence | localStorage (primary), Supabase (optional cloud sync) |
 | Animations | Framer Motion |
-
+```
 ---
 
 ### Project Structure
@@ -114,7 +114,7 @@ ItineraryData
 │       └── gallery: GallerySlot[]
 │           └── url, caption, size, slot, source, attribution
 └── comments?: Comment[]
-
+```
 The `days` array is a flat list mixing city-intro entries (`isCityIntro: true`) and actual day cards. City intros are auto-inserted by `ensureCityIntros()` on first load of bundled data.
 
 ---
@@ -132,7 +132,7 @@ Key features:
 ---
 
 ### API Routes
-
+```
 | Route | Method | Purpose |
 | --- | --- | --- |
 | `/api/generate-city` | POST | Gemini 2.5 Flash: generates city travel info (description, tips, coords, splitName) |
