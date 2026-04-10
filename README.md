@@ -86,7 +86,7 @@ europe-alps-tour/
 ├── next.config.js                      # Next.js config (Unsplash/Pexels image domains)
 ├── tailwind.config.ts                  # Tailwind config (custom fonts, colors, design tokens)
 └── package.json
-
+```
 ---
 
 ### Core Data Model
@@ -141,7 +141,7 @@ Key features:
 | `/api/trips` | POST/GET | Create trip in Supabase / Lookup trip by passphrase |
 | `/api/trips/[id]` | GET/PUT | Load trip / Update trip (passphrase-verified via SHA-256 hash) |
 | `/api/trips/[id]/verify` | GET | Verify passphrase against stored hash |
-
+```
 ---
 
 ### External APIs
