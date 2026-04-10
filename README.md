@@ -198,8 +198,9 @@ CREATE TABLE trips (
   created_at TIMESTAMPTZ DEFAULT now(),
   updated_at TIMESTAMPTZ DEFAULT now()
 );
--- RLS: public read, service-role-only write
 ```
+-- RLS: public read, service-role-only write
+
 ---
 
 ### Design Tokens
