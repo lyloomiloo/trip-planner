@@ -90,9 +90,9 @@ europe-alps-tour/
 ---
 
 ### Core Data Model
-```
-Defined in itinerary.ts:
 
+Defined in itinerary.ts:
+```
 ItineraryData
 ├── tripTitle: string[]          # ["EUROPE", "ALPS", "TOUR", "2026"]
 ├── travellers: number
@@ -132,7 +132,7 @@ Key features:
 ---
 
 ### API Routes
-```
+
 | Route | Method | Purpose |
 | --- | --- | --- |
 | `/api/generate-city` | POST | Gemini 2.5 Flash: generates city travel info (description, tips, coords, splitName) |
@@ -141,7 +141,7 @@ Key features:
 | `/api/trips` | POST/GET | Create trip in Supabase / Lookup trip by passphrase |
 | `/api/trips/[id]` | GET/PUT | Load trip / Update trip (passphrase-verified via SHA-256 hash) |
 | `/api/trips/[id]/verify` | GET | Verify passphrase against stored hash |
-```
+
 ---
 
 ### External APIs
