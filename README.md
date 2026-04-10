@@ -24,7 +24,7 @@ PlanMyTrip is an interactive trip planning web application built with **Next.js 
 
 ### Project Structure
 
-`europe-alps-tour/
+europe-alps-tour/
 ├── src/
 │   ├── app/
 │   │   ├── page.tsx                    # Main entry — view router (landing/new/manual/ai/trip)
@@ -85,7 +85,7 @@ PlanMyTrip is an interactive trip planning web application built with **Next.js 
 ├── .env.example                        # Environment variable template
 ├── next.config.js                      # Next.js config (Unsplash/Pexels image domains)
 ├── tailwind.config.ts                  # Tailwind config (custom fonts, colors, design tokens)
-└── package.json`
+└── package.json
 
 ---
 
@@ -93,7 +93,7 @@ PlanMyTrip is an interactive trip planning web application built with **Next.js 
 
 Defined in itinerary.ts:
 
-`ItineraryData
+ItineraryData
 ├── tripTitle: string[]          # ["EUROPE", "ALPS", "TOUR", "2026"]
 ├── travellers: number
 ├── origin: string               # "Singapore"
@@ -113,7 +113,7 @@ Defined in itinerary.ts:
 │       │   └── time, title, type, highlight, textColor, highlightColor
 │       └── gallery: GallerySlot[]
 │           └── url, caption, size, slot, source, attribution
-└── comments?: Comment[]`
+└── comments?: Comment[]
 
 The `days` array is a flat list mixing city-intro entries (`isCityIntro: true`) and actual day cards. City intros are auto-inserted by `ensureCityIntros()` on first load of bundled data.
 
